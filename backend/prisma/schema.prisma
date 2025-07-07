@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Note: SQLite doesn't support enums, so we use strings with validation
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         String   @default("TECHNICIAN")
+  firstName    String?
+  lastName     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relationships
+  assignedTasks    Task[]
+  createdProjects  Project[]
+  approvedCheckpoints Checkpoint[]
+  processTemplates ProcessTemplate[]
+
+  @@map("users")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  status      String   @default("active")
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  priority    String   @default("medium")
+  createdBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  tasks     Task[]
+  workUnits WorkUnit[]
+  creator   User? @relation(fields: [createdBy], references: [id])
+
+  @@map("projects")
+}
+
+model Task {
+  id             Int      @id @default(autoincrement())
+  name           String
+  description    String?
+  projectId      Int
+  assignedTo     Int?
+  priority       String   @default("medium")
+  status         String   @default("pending")
+  kanbanColumn   String   @default("backlog")
+  estimatedHours Float?
+  actualHours    Float?
+  progress       Int      @default(0)
+  dueDate        DateTime?
+  startDate      DateTime?
+  completedDate  DateTime?
+  predictedDelay Float?
+  riskScore      Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relationships
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee  User?   @relation(fields: [assignedTo], references: [id])
+
+  @@map("tasks")
+}
+
+model WorkUnit {
+  id               Int         @id @default(autoincrement())
+  name             String
+  description      String?
+  projectId        Int
+  unitType         String
+  estimatedDuration Float?
+  actualDuration   Float?
+  status           String      @default("pending")
+  assignedTo       Int?
+  startDate        DateTime?
+  completedDate    DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relationships
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  checkpoints Checkpoint[]
+
+  @@map("work_units")
+}
+
+model Checkpoint {
+  id              Int           @id @default(autoincrement())
+  name            String
+  description     String?
+  workUnitId      Int
+  checkpointType  String
+  requiredApproval Boolean      @default(false)
+  approvedBy      Int?
+  status          String        @default("pending")
+  completedAt     DateTime?
+  createdAt       DateTime      @default(now())
+
+  // Relationships
+  workUnit   WorkUnit @relation(fields: [workUnitId], references: [id], onDelete: Cascade)
+  approver   User?    @relation(fields: [approvedBy], references: [id])
+
+  @@map("checkpoints")
+}
+
+model ProcessTemplate {
+  id          Int             @id @default(autoincrement())
+  name        String
+  description String?
+  createdBy   Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  steps       TemplateStep[]
+
+  // Relationships
+  creator     User            @relation(fields: [createdBy], references: [id])
+
+  @@map("process_templates")
+}
+
+model TemplateStep {
+  id                Int             @id @default(autoincrement())
+  templateId        Int
+  stepName          String
+  sequenceOrder     Int
+  baselineTimeHours Float
+  assignmentType    String          // 'ROLE' or 'MACHINE'
+  assignedRoleId    Int?
+  assignedMachineId Int?
+  dependencyStepId  Int?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relationships
+  template          ProcessTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("template_steps")
+} 

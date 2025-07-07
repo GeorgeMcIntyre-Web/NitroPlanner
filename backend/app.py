@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_socketio import SocketIO, emit
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 import os
 from datetime import datetime, timedelta
 import requests
@@ -20,7 +21,7 @@ from enum import Enum
 app = Flask(__name__)
 
 # Configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///nitro_planner.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/nitro_planner.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
@@ -28,9 +29,19 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 socketio = SocketIO(app, cors_allowed_origins="*")
+jwt = JWTManager(app)
+
+# JWT Configuration
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = timedelta(days=30)
 
 # CORS configuration
 CORS(app, origins=[os.getenv('CORS_ORIGIN', 'http://localhost:3000')])
+
+# Import and register authentication blueprint
+from auth import auth_bp
+app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
 # Enums for Unit of Work
 class WorkUnitType(Enum):
@@ -81,7 +92,6 @@ class WorkUnitType(Enum):
     ROBOTIC_WELDING = "robotic_welding"
     AUTOMATED_ASSEMBLY = "automated_assembly"
     AUTOMATED_INSPECTION = "automated_inspection"
-    AUTOMATED_TESTING = "automated_testing"
     
     # Generic Robotics & Automation Types
     ROBOTICS = "robotics"
@@ -177,7 +187,6 @@ class WorkUnitType(Enum):
     EQUIPMENT_INSTALLATION = "equipment_installation"
     PIPE_INSTALLATION = "pipe_installation"
     DUCT_INSTALLATION = "duct_installation"
-    ELECTRICAL_INSTALLATION = "electrical_installation"
     SAFETY_SYSTEM_INSTALLATION = "safety_system_installation"
     EQUIPMENT_CALIBRATION = "equipment_calibration"
     SITE_PREPARATION = "site_preparation"
@@ -197,14 +206,12 @@ class WorkUnitType(Enum):
     CORRECTIVE_MAINTENANCE = "corrective_maintenance"
     EQUIPMENT_REPAIR = "equipment_repair"
     SPARE_PARTS_MANAGEMENT = "spare_parts_management"
-    EQUIPMENT_CALIBRATION = "equipment_calibration"
     SAFETY_SYSTEM_MAINTENANCE = "safety_system_maintenance"
     TRAINING_DELIVERY = "training_delivery"
     TROUBLESHOOTING = "troubleshooting"
     PREDICTIVE_MAINTENANCE = "predictive_maintenance"
     MAINTENANCE_SCHEDULING = "maintenance_scheduling"
     ASSET_MANAGEMENT = "asset_management"
-    PERFORMANCE_MONITORING = "performance_monitoring"
     FAULT_DETECTION = "fault_detection"
     MAINTENANCE_ANALYTICS = "maintenance_analytics"
     SPARE_PARTS_OPTIMIZATION = "spare_parts_optimization"
@@ -286,7 +293,6 @@ class RoleType(Enum):
     MANUFACTURING_ENGINEER = "manufacturing_engineer"
     QUALITY_ENGINEER = "quality_engineer"
     ROBOTICS_ENGINEER = "robotics_engineer"
-    ELECTRICAL_ENGINEER = "electrical_engineer"
     CONTROL_ENGINEER = "control_engineer"
     THERMAL_ENGINEER = "thermal_engineer"
     STRUCTURAL_ENGINEER = "structural_engineer"
@@ -339,7 +345,6 @@ class RoleType(Enum):
     EDITOR = "editor"
     
     # Generic Construction Roles
-    CONSTRUCTION_MANAGER = "construction_manager"
     INSTALLATION_TECHNICIAN = "installation_technician"
     FIELD_ENGINEER = "field_engineer"
     CONSTRUCTION_WORKER = "construction_worker"
@@ -395,7 +400,6 @@ class RoleType(Enum):
     COORDINATOR = "coordinator"
     PLANNER = "planner"
     SCHEDULER = "scheduler"
-    COORDINATOR = "coordinator"
     ASSISTANT = "assistant"
     SPECIALIST = "specialist"
     CONSULTANT = "consultant"
@@ -536,7 +540,7 @@ class CADFile(db.Model):
     file_type = db.Column(db.String(10))
     file_size = db.Column(db.Integer)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    metadata = db.Column(db.JSON)
+    cad_metadata = db.Column(db.JSON)
 
 class TaskCompletionHistory(db.Model):
     """Track historical task completion data for improving estimates"""
