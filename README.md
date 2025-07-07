@@ -50,14 +50,19 @@ nitro-planner/
 
 ## 🏗️ Architecture
 - **Frontend**: Next.js with TypeScript
-- **Backend**: Flask with SQLAlchemy
-- **Database**: PostgreSQL
+- **Backend**: Node.js with Express and Prisma
+- **Database**: PostgreSQL with Prisma ORM
+- **CAD Integration**: Multi-software BOM extraction (CATIA, NX, Fides, SolidWorks, Inventor)
 - **AI/ML**: Abacus.ai integration
 - **Deployment**: Railway (dev) → AWS/Azure (prod)
 
 ## 📊 Features
-- 41+ specialized role dashboards
-- AI-powered delay prediction
-- CAD file integration
-- Real-time collaboration
-- Resource optimization 
+- **41+ specialized role dashboards** with real-time analytics
+- **AI-powered delay prediction** and risk assessment
+- **Comprehensive BOM extraction** from multiple CAD software (CATIA, NX, Fides, SolidWorks, Inventor, etc.)
+- **CAD software integration** with configurable extraction templates
+- **Design management platform** with version control and review system
+- **Manufacturing instructions system** with step-by-step workflows
+- **Advanced analytics & reporting** with customizable dashboards
+- **Real-time collaboration** with WebSocket support
+- **Resource optimization** and capacity planning 

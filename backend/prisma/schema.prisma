@@ -1,0 +1,587 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Company/Organization Management
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  industry        String?  // automotive, aerospace, etc.
+  companySize     String?  // small, medium, large
+  subscriptionTier String  @default("basic") // basic, pro, enterprise
+  settings        Json?    // Company-specific configurations
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users           User[]
+  projects        Project[]
+  processTemplates ProcessTemplate[]
+  designTemplates  DesignTemplate[]
+  cadSoftware      CADSoftware[]
+
+  @@map("companies")
+}
+
+// User Management
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  username    String   @unique
+  password    String
+  firstName   String?
+  lastName    String?
+  role        String   // mechanical_designer, electrical_designer, simulation_engineer, manufacturing_engineer, quality_engineer, project_manager
+  department  String?
+  avatar      String?
+  isActive    Boolean  @default(true)
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Company relation
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Relations
+  assignedWorkUnits WorkUnit[] @relation("WorkUnitAssignee")
+  assignedTasks     Task[]     @relation("TaskAssignee")
+  assignedCheckpoints Checkpoint[] @relation("CheckpointAssignee")
+  createdProjects    Project[] @relation("ProjectCreator")
+  createdWorkUnits   WorkUnit[] @relation("WorkUnitCreator")
+  createdTasks       Task[]     @relation("TaskCreator")
+  uploadedDesigns    DesignFile[] @relation("DesignUploader")
+  reviewedDesigns    DesignReview[] @relation("DesignReviewer")
+  bomExtractionJobs  BOMExtractionJob[] @relation("BOMExtractionCreator")
+
+  @@map("users")
+}
+
+// Project Management
+model Project {
+  id                  String    @id @default(cuid())
+  name                String
+  description         String?
+  status              String    @default("active") // active, completed, on_hold, cancelled
+  startDate           DateTime?
+  endDate             DateTime?
+  budget              Float?
+  priority            String    @default("medium") // low, medium, high
+  progress            Float     @default(0) // 0-100%
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // AI prediction fields
+  predictedCompletion DateTime?
+  confidenceScore     Float?
+  riskLevel           String?   // low, medium, high
+
+  // Relations
+  companyId           String
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  createdById         String
+  createdBy           User      @relation("ProjectCreator", fields: [createdById], references: [id])
+
+  workUnits           WorkUnit[]
+  tasks               Task[]
+  monteCarloSimulations MonteCarloSimulation[]
+  designFiles         DesignFile[]
+  designReviews       DesignReview[]
+  designVersions      DesignVersion[]
+  bomExtractionJobs   BOMExtractionJob[]
+
+  @@map("projects")
+}
+
+// Work Unit Management
+model WorkUnit {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  workUnitType    String   // design, simulation, validation, manufacturing, assembly, testing, documentation
+  roleType        String   // mechanical_designer, electrical_designer, simulation_engineer, etc.
+  status          String   @default("pending") // pending, in_progress, completed, on_hold
+  priority        String   @default("medium") // low, medium, high
+  estimatedHours  Float?
+  actualHours     Float?
+  progress        Float    @default(0) // 0-100%
+  startDate       DateTime?
+  endDate         DateTime?
+  dependencies    Json?    // List of work unit IDs this depends on
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Process simulation fields
+  simulationData  Json?    // Simulation parameters and results
+
+  // AI prediction fields
+  predictedDelay  Float?
+  riskScore       Float?
+  confidence      Float?
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  assignedToId    String?
+  assignedTo      User?    @relation("WorkUnitAssignee", fields: [assignedToId], references: [id])
+
+  createdById     String
+  createdBy       User     @relation("WorkUnitCreator", fields: [createdById], references: [id])
+
+  checkpoints     Checkpoint[]
+  tasks           Task[]
+  designFiles     DesignFile[]
+
+  @@map("work_units")
+}
+
+// Checkpoint Management
+model Checkpoint {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  checkpointType  String   // quality_gate, review, approval, verification, validation, test
+  status          String   @default("pending") // pending, in_progress, passed, failed
+  requiredRole    String?  // Who needs to approve this checkpoint
+  dueDate         DateTime?
+  completedDate   DateTime?
+  notes           String?
+  attachments     Json?    // Files, links, etc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  workUnitId      String
+  workUnit        WorkUnit @relation(fields: [workUnitId], references: [id], onDelete: Cascade)
+
+  assignedToId    String?
+  assignedTo      User?    @relation("CheckpointAssignee", fields: [assignedToId], references: [id])
+
+  @@map("checkpoints")
+}
+
+// Process Templates
+model ProcessTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  roleType        String
+  workUnitType    String
+  templateData    Json     // Work unit and checkpoint templates
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("process_templates")
+}
+
+// Design Templates (for standardized design workflows)
+model DesignTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  designType      String   // assembly, component, system, etc.
+  industry        String?  // automotive, aerospace, etc.
+  templateData    Json     // Design workflow, checkpoints, file types
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("design_templates")
+}
+
+// Task Management
+model Task {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  status          String   @default("pending") // pending, in_progress, review, completed
+  priority        String   @default("medium") // low, medium, high
+  dueDate         DateTime?
+  estimatedHours  Float?
+  actualHours     Float?
+  progress        Float    @default(0) // 0-100%
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Kanban fields
+  kanbanColumn    String   @default("backlog") // backlog, todo, in_progress, review, done
+
+  // Gantt fields
+  startDate       DateTime?
+  endDate         DateTime?
+  dependencies    Json?    // List of task IDs this task depends on
+
+  // AI prediction fields
+  predictedDelay  Float?
+  riskScore       Float?
+  confidence      Float?
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  workUnitId      String?
+  workUnit        WorkUnit? @relation(fields: [workUnitId], references: [id])
+
+  assignedToId    String?
+  assignedTo      User?    @relation("TaskAssignee", fields: [assignedToId], references: [id])
+
+  createdById     String
+  createdBy       User     @relation("TaskCreator", fields: [createdById], references: [id])
+
+  taskDependencies TaskDependency[] @relation("TaskDependency")
+  dependentTasks   TaskDependency[] @relation("DependentTask")
+
+  @@map("tasks")
+}
+
+// Task Dependencies
+model TaskDependency {
+  id                  String   @id @default(cuid())
+  dependencyType      String   @default("finish_to_start") // finish_to_start, start_to_start, etc.
+  createdAt           DateTime @default(now())
+
+  // Relations
+  taskId              String
+  task                Task     @relation("TaskDependency", fields: [taskId], references: [id], onDelete: Cascade)
+
+  dependsOnTaskId     String
+  dependsOnTask       Task     @relation("DependentTask", fields: [dependsOnTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnTaskId])
+  @@map("task_dependencies")
+}
+
+// Monte Carlo Simulation
+model MonteCarloSimulation {
+  id                  String   @id @default(cuid())
+  simulationDate      DateTime @default(now())
+  iterations          Int      @default(10000)
+  results             Json?    // Simulation results
+  confidenceIntervals Json?
+
+  // Relations
+  projectId           String
+  project             Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("monte_carlo_simulations")
+}
+
+// Enhanced Design File Management (replaces CADFile)
+model DesignFile {
+  id              String   @id @default(cuid())
+  filename        String
+  originalName    String
+  fileType        String   // .dwg, .dxf, .step, .stp, .iges, .igs, .stl, .obj, .3ds, .max, .prt, .asm, .sldprt, .sldasm, etc.
+  fileSize        Int
+  filePath        String
+  fileHash        String?  // For deduplication and integrity
+  uploadedAt      DateTime @default(now())
+  metadata        Json?    // Design metadata, properties, etc.
+
+  // Design-specific fields
+  designType      String   // cad, drawing, specification, bom, instruction, report, etc.
+  designStage     String   // concept, detailed, manufacturing, assembly, testing, etc.
+  version         String   @default("1.0")
+  revision        String?  // A, B, C, etc.
+  status          String   @default("draft") // draft, review, approved, released, obsolete
+  
+  // Design relationships
+  parentFileId    String?  // For file hierarchies
+  parentFile      DesignFile? @relation("FileHierarchy", fields: [parentFileId], references: [id])
+  childFiles      DesignFile[] @relation("FileHierarchy")
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  workUnitId      String?
+  workUnit        WorkUnit? @relation(fields: [workUnitId], references: [id])
+
+  uploadedById    String
+  uploadedBy      User     @relation("DesignUploader", fields: [uploadedById], references: [id])
+
+  designVersions  DesignVersion[]
+  designReviews   DesignReview[]
+  bomExtractionJobs BOMExtractionJob[]
+
+  @@map("design_files")
+}
+
+// Design Version Management
+model DesignVersion {
+  id              String   @id @default(cuid())
+  version         String   // 1.0, 1.1, 2.0, etc.
+  revision        String?  // A, B, C, etc.
+  changeLog       String?  // Description of changes
+  changeType      String   // major, minor, patch
+  createdAt       DateTime @default(now())
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  designFileId    String
+  designFile      DesignFile @relation(fields: [designFileId], references: [id], onDelete: Cascade)
+
+  @@map("design_versions")
+}
+
+// Design Review System
+model DesignReview {
+  id              String   @id @default(cuid())
+  reviewType      String   // peer, supervisor, client, regulatory, etc.
+  status          String   @default("pending") // pending, in_progress, approved, rejected, needs_revision
+  comments        String?
+  rating          Int?     // 1-5 rating
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  designFileId    String
+  designFile      DesignFile @relation(fields: [designFileId], references: [id], onDelete: Cascade)
+
+  reviewerId      String
+  reviewer        User     @relation("DesignReviewer", fields: [reviewerId], references: [id])
+
+  @@map("design_reviews")
+}
+
+// Bill of Materials (BOM) Management
+model BillOfMaterials {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  bomType         String   // assembly, component, system, etc.
+  version         String   @default("1.0")
+  status          String   @default("draft") // draft, review, approved, released
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // BOM data
+  bomData         Json     // Structured BOM data with quantities, materials, etc.
+  
+  // Extraction metadata
+  extractedFrom   String?  // Source CAD software (CATIA, NX, Fides, etc.)
+  extractionMethod String? // automatic, manual, hybrid
+  extractionDate  DateTime?
+  extractionStatus String? // pending, in_progress, completed, failed
+  extractionLog   String?  // Log of extraction process
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  designFileId    String?
+  designFile      DesignFile? @relation(fields: [designFileId], references: [id])
+
+  // BOM components
+  bomComponents   BOMComponent[]
+  
+  // BOM versions
+  bomVersions     BOMVersion[]
+
+  @@map("bill_of_materials")
+}
+
+// BOM Component Management
+model BOMComponent {
+  id              String   @id @default(cuid())
+  partNumber      String
+  name            String
+  description     String?
+  quantity        Float    @default(1)
+  unit            String   @default("pcs") // pcs, kg, m, etc.
+  material        String?
+  supplier        String?
+  supplierPartNumber String?
+  cost            Float?
+  currency        String   @default("USD")
+  leadTime        Int?     // in days
+  location        String?  // warehouse location
+  status          String   @default("active") // active, obsolete, discontinued
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // CAD-specific data
+  cadPartNumber   String?  // Original part number from CAD
+  cadMaterial     String?  // Material from CAD
+  cadProperties   Json?    // Additional CAD properties
+  
+  // Relations
+  bomId           String
+  bom             BillOfMaterials @relation(fields: [bomId], references: [id], onDelete: Cascade)
+
+  // Component hierarchy
+  parentComponentId String?
+  parentComponent   BOMComponent? @relation("ComponentHierarchy", fields: [parentComponentId], references: [id])
+  childComponents   BOMComponent[] @relation("ComponentHierarchy")
+
+  @@map("bom_components")
+}
+
+// BOM Version Management
+model BOMVersion {
+  id              String   @id @default(cuid())
+  version         String   // 1.0, 1.1, 2.0, etc.
+  changeLog       String?  // Description of changes
+  changeType      String   // major, minor, patch
+  createdAt       DateTime @default(now())
+
+  // Relations
+  bomId           String
+  bom             BillOfMaterials @relation(fields: [bomId], references: [id], onDelete: Cascade)
+
+  @@map("bom_versions")
+}
+
+// CAD Software Integration
+model CADSoftware {
+  id              String   @id @default(cuid())
+  name            String   // CATIA, NX, Fides, SolidWorks, etc.
+  version         String?
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Integration settings
+  apiEndpoint     String?
+  apiKey          String?
+  credentials     Json?    // Encrypted credentials
+  settings        Json?    // Software-specific settings
+
+  // Relations
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Extraction templates
+  extractionTemplates CADExtractionTemplate[]
+
+  @@map("cad_software")
+}
+
+// CAD Extraction Templates
+model CADExtractionTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  templateType    String   // bom, properties, geometry, etc.
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Template configuration
+  templateConfig  Json     // Extraction rules, mappings, etc.
+
+  // Relations
+  cadSoftwareId   String
+  cadSoftware     CADSoftware @relation(fields: [cadSoftwareId], references: [id], onDelete: Cascade)
+
+  @@map("cad_extraction_templates")
+}
+
+// BOM Extraction Jobs
+model BOMExtractionJob {
+  id              String   @id @default(cuid())
+  jobType         String   // bom_extraction, component_analysis, etc.
+  status          String   @default("pending") // pending, in_progress, completed, failed
+  progress        Float    @default(0) // 0-100%
+  startedAt       DateTime?
+  completedAt     DateTime?
+  errorMessage    String?
+  resultData      Json?    // Extraction results
+  
+  // Job configuration
+  config          Json     // Job parameters, settings, etc.
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  designFileId    String?
+  designFile      DesignFile? @relation(fields: [designFileId], references: [id])
+
+  bomId           String?
+  bom             BillOfMaterials? @relation(fields: [bomId], references: [id])
+
+  createdById     String
+  createdBy       User     @relation("BOMExtractionCreator", fields: [createdById], references: [id])
+
+  @@map("bom_extraction_jobs")
+}
+
+// Manufacturing Instructions
+model ManufacturingInstruction {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  instructionType String   // assembly, machining, welding, testing, etc.
+  difficulty      String   // easy, medium, hard, expert
+  estimatedTime   Float?   // in minutes
+  status          String   @default("draft") // draft, review, approved, released
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Instruction data
+  instructionData Json     // Step-by-step instructions, tools, materials, etc.
+
+  // Relations
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  designFileId    String?
+  designFile      DesignFile? @relation(fields: [designFileId], references: [id])
+
+  // Manufacturing steps
+  manufacturingSteps ManufacturingStep[]
+
+  @@map("manufacturing_instructions")
+}
+
+// Manufacturing Steps
+model ManufacturingStep {
+  id              String   @id @default(cuid())
+  stepNumber      Int
+  title           String
+  description     String?
+  instructions    String?  // Detailed step instructions
+  estimatedTime   Float?   // in minutes
+  requiredTools   Json?    // Array of required tools
+  requiredMaterials Json?  // Array of required materials
+  safetyNotes     String?
+  qualityChecks   Json?    // Array of quality check items
+  attachments     Json?    // Array of attached files
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  instructionId   String
+  instruction     ManufacturingInstruction @relation(fields: [instructionId], references: [id], onDelete: Cascade)
+
+  @@map("manufacturing_steps")
+} 

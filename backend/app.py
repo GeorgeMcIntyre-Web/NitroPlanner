@@ -15,6 +15,9 @@ import plotly.express as px
 from dateutil.relativedelta import relativedelta
 import random
 from enum import Enum
+from functools import wraps
+from werkzeug.security import generate_password_hash, check_password_hash
+from jose import JWTError, jwt
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -23,6 +26,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///nitro_planner.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key-change-in-production')
+app.config['JWT_ALGORITHM'] = 'HS256'
+app.config['JWT_ACCESS_TOKEN_EXPIRE_MINUTES'] = 30
 
 # Initialize extensions
 db = SQLAlchemy(app)
