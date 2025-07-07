@@ -1,0 +1,34 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+requests==2.31.0
+pandas==2.1.1
+numpy==1.24.3
+scikit-learn==1.3.0
+xgboost==1.7.6
+gunicorn==21.2.0
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+Pillow==10.0.1
+openpyxl==3.1.2
+# Advanced project management dependencies
+plotly==5.17.0
+dash==2.14.2
+networkx==3.2.1
+matplotlib==3.7.2
+seaborn==0.12.2
+# Monte Carlo and simulation
+scipy==1.11.3
+# Advanced AI and ML
+tensorflow==2.13.0
+transformers==4.35.0
+# Date and time handling
+python-dateutil==2.8.2
+# JSON handling for complex data
+orjson==3.9.10
+# WebSocket support for real-time updates
+flask-socketio==5.3.6 
