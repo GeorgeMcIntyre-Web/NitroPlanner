@@ -13,6 +13,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline'
+import TaskCreateForm from '../components/TaskCreateForm'
+import Modal from '../components/ui/Modal'
 
 // API client
 const api = axios.create({
@@ -55,7 +57,7 @@ interface Project {
 }
 
 // Kanban Column Component
-const KanbanColumn = ({ title, tasks, columnId, onTaskClick, onStartTask, onCompleteTask }: any) => {
+const KanbanColumn = ({ title, tasks, columnId, onTaskClick, onStartTask, onCompleteTask, onAddTask }: any) => {
   const getColumnColor = (columnId: string) => {
     switch (columnId) {
       case 'backlog': return 'bg-gray-100'
@@ -89,6 +91,16 @@ const KanbanColumn = ({ title, tasks, columnId, onTaskClick, onStartTask, onComp
           <span className="bg-white bg-opacity-50 px-2 py-1 rounded-full text-sm font-medium">
             {tasks.length}
           </span>
+          {/* Add Task button only for Backlog column */}
+          {columnId === 'backlog' && (
+            <button
+              onClick={onAddTask}
+              className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs flex items-center"
+              aria-label="Add Task"
+            >
+              <PlusIcon className="h-4 w-4 mr-1" /> Add Task
+            </button>
+          )}
         </div>
       </div>
       
@@ -356,6 +368,7 @@ export default function KanbanBoard() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [taskLoading, setTaskLoading] = useState(false)
   const [socket, setSocket] = useState<Socket | null>(null)
   const queryClient = useQueryClient()
 
@@ -454,6 +467,18 @@ export default function KanbanBoard() {
     setIsTaskModalOpen(true)
   }
 
+  // Add Task handler
+  const handleAddTask = () => setIsTaskModalOpen(true)
+  const handleTaskCreate = async (data: any) => {
+    setTaskLoading(true)
+    // Placeholder for API call
+    await new Promise((res) => setTimeout(res, 1000))
+    setTaskLoading(false)
+    setIsTaskModalOpen(false)
+    toast.success('Task created!')
+    refetchKanban()
+  }
+
   if (!projects || projects.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -507,6 +532,7 @@ export default function KanbanBoard() {
                 onTaskClick={handleTaskClick}
                 onStartTask={handleStartTask}
                 onCompleteTask={handleCompleteTask}
+                onAddTask={handleAddTask}
               />
               <KanbanColumn
                 title="To Do"
@@ -555,6 +581,20 @@ export default function KanbanBoard() {
         }}
         onUpdate={refetchKanban}
       />
+
+      {/* Task Create Modal */}
+      <Modal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        title="Create New Task"
+        size="md"
+      >
+        <TaskCreateForm
+          onSubmit={handleTaskCreate}
+          onCancel={() => setIsTaskModalOpen(false)}
+          loading={taskLoading}
+        />
+      </Modal>
     </div>
   )
 } 

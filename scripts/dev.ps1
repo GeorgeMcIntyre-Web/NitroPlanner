@@ -50,7 +50,7 @@ pip install -r requirements.txt
 
 # Start backend server
 Write-Host "Starting backend server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd backend; .\venv\Scripts\Activate.ps1; python app.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\venv\Scripts\Activate.ps1; python app.py"
 
 # Navigate back to root
 Set-Location ..
@@ -66,7 +66,7 @@ npm install
 
 # Start frontend server
 Write-Host "Starting frontend server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd frontend; npm run dev"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev"
 
 # Navigate back to root
 Set-Location ..

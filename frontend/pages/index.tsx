@@ -3,6 +3,8 @@ import { useQuery } from 'react-query'
 import axios from 'axios'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import ProtectedRoute from '../components/ProtectedRoute'
+import { useAuth } from '../contexts/AuthContext'
 import {
   ChartBarIcon,
   ClockIcon,
@@ -273,37 +275,42 @@ const TasksList = () => {
 }
 
 // Kanban Summary Component
-const KanbanSummary = ({ summary }: { summary: any }) => (
-  <div className="bg-white rounded-lg shadow p-6">
-    <h3 className="text-lg font-medium text-gray-900 mb-4">Kanban Overview</h3>
-    <div className="grid grid-cols-5 gap-4">
-      <div className="text-center">
-        <div className="text-2xl font-bold text-gray-400">{summary.backlog}</div>
-        <div className="text-xs text-gray-500">Backlog</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold text-blue-600">{summary.todo}</div>
-        <div className="text-xs text-gray-500">To Do</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold text-yellow-600">{summary.in_progress}</div>
-        <div className="text-xs text-gray-500">In Progress</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold text-purple-600">{summary.review}</div>
-        <div className="text-xs text-gray-500">Review</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold text-green-600">{summary.done}</div>
-        <div className="text-xs text-gray-500">Done</div>
+const KanbanSummary = ({ summary }: { summary: any }) => {
+  // Provide default values if summary is undefined
+  const safeSummary = summary || { backlog: 0, todo: 0, in_progress: 0, review: 0, done: 0 };
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Kanban Overview</h3>
+      <div className="grid grid-cols-5 gap-4">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-gray-400">{safeSummary.backlog}</div>
+          <div className="text-xs text-gray-500">Backlog</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-blue-600">{safeSummary.todo}</div>
+          <div className="text-xs text-gray-500">To Do</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-yellow-600">{safeSummary.in_progress}</div>
+          <div className="text-xs text-gray-500">In Progress</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-purple-600">{safeSummary.review}</div>
+          <div className="text-xs text-gray-500">Review</div>
+        </div>
+        <div className="text-center">
+          <div className="text-2xl font-bold text-green-600">{safeSummary.done}</div>
+          <div className="text-xs text-gray-500">Done</div>
+        </div>
       </div>
     </div>
-  </div>
-)
+  );
+};
 
 // Main Dashboard Component
 export default function Dashboard() {
   const [selectedRole, setSelectedRole] = useState('Project Manager')
+  const { user } = useAuth()
 
   const { data: dashboardData, isLoading } = useQuery<DashboardData>(
     ['dashboard', selectedRole],
@@ -325,22 +332,25 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">NitroPlanner</h1>
-              <p className="text-gray-600">AI-Powered Automotive Project Management</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Welcome back,</span>
-              <span className="text-sm font-medium text-gray-900">{selectedRole}</span>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">NitroPlanner</h1>
+                <p className="text-gray-600">AI-Powered Automotive Project Management</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-500">Welcome back,</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {user?.first_name} {user?.last_name} ({user?.role})
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -427,6 +437,7 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </ProtectedRoute>
   )
 } 
