@@ -10,6 +10,7 @@ import {
   CogIcon,
   Bars3Icon,
   XMarkIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline'
 
 const Navigation = () => {
@@ -22,6 +23,7 @@ const Navigation = () => {
     { name: 'Gantt Chart', href: '/gantt', icon: CalendarIcon },
     { name: 'Work Units', href: '/work-units', icon: DocumentChartBarIcon },
     { name: 'Simulation', href: '/simulation', icon: DocumentChartBarIcon },
+    { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Projects', href: '/projects', icon: UserGroupIcon },
     { name: 'Settings', href: '/settings', icon: CogIcon },
   ]
