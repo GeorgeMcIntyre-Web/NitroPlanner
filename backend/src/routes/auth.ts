@@ -7,6 +7,7 @@ import { body } from 'express-validator';
 import { validationResult } from 'express-validator';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
+import { Prisma } from '@prisma/client';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -163,12 +164,13 @@ router.post('/login', async (req: Request, res: Response) => {
 });
 
 // 2FA Setup - Generate secret and QR code
-router.post('/2fa/setup', async (req: Request, res: Response) => {
+router.post('/2fa/setup', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId } = req.body;
     
     if (!userId) {
-      return res.status(400).json({ error: 'User ID is required' });
+      res.status(400).json({ error: 'User ID is required' });
+      return;
     }
 
     // Generate secret
@@ -213,7 +215,8 @@ router.post('/2fa/enable', async (req: Request, res: Response) => {
     const { userId, token } = req.body;
     
     if (!userId || !token) {
-      return res.status(400).json({ error: 'User ID and token are required' });
+      res.status(400).json({ error: 'User ID and token are required' });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -221,7 +224,8 @@ router.post('/2fa/enable', async (req: Request, res: Response) => {
     });
 
     if (!user || !user.twoFactorSecret) {
-      return res.status(400).json({ error: 'User not found or 2FA not setup' });
+      res.status(400).json({ error: 'User not found or 2FA not setup' });
+      return;
     }
 
     // Verify token
@@ -233,7 +237,8 @@ router.post('/2fa/enable', async (req: Request, res: Response) => {
     });
 
     if (!verified) {
-      return res.status(400).json({ error: 'Invalid 2FA token' });
+      res.status(400).json({ error: 'Invalid 2FA token' });
+      return;
     }
 
     // Enable 2FA
@@ -250,12 +255,13 @@ router.post('/2fa/enable', async (req: Request, res: Response) => {
 });
 
 // 2FA Disable
-router.post('/2fa/disable', async (req: Request, res: Response) => {
+router.post('/2fa/disable', async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, token } = req.body;
     
     if (!userId || !token) {
-      return res.status(400).json({ error: 'User ID and token are required' });
+      res.status(400).json({ error: 'User ID and token are required' });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -263,7 +269,8 @@ router.post('/2fa/disable', async (req: Request, res: Response) => {
     });
 
     if (!user || !user.twoFactorSecret) {
-      return res.status(400).json({ error: 'User not found or 2FA not setup' });
+      res.status(400).json({ error: 'User not found or 2FA not setup' });
+      return;
     }
 
     // Verify token
@@ -275,7 +282,8 @@ router.post('/2fa/disable', async (req: Request, res: Response) => {
     });
 
     if (!verified) {
-      return res.status(400).json({ error: 'Invalid 2FA token' });
+      res.status(400).json({ error: 'Invalid 2FA token' });
+      return;
     }
 
     // Disable 2FA
@@ -284,7 +292,7 @@ router.post('/2fa/disable', async (req: Request, res: Response) => {
       data: { 
         twoFactorEnabled: false,
         twoFactorSecret: null,
-        backupCodes: null
+        backupCodes: Prisma.JsonNull
       }
     });
 
@@ -301,7 +309,8 @@ router.post('/2fa/verify', async (req: Request, res: Response) => {
     const { userId, token, isBackupCode = false } = req.body;
     
     if (!userId || !token) {
-      return res.status(400).json({ error: 'User ID and token are required' });
+      res.status(400).json({ error: 'User ID and token are required' });
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -309,7 +318,8 @@ router.post('/2fa/verify', async (req: Request, res: Response) => {
     });
 
     if (!user || !user.twoFactorEnabled) {
-      return res.status(400).json({ error: 'User not found or 2FA not enabled' });
+      res.status(400).json({ error: 'User not found or 2FA not enabled' });
+      return;
     }
 
     let verified = false;
@@ -339,7 +349,8 @@ router.post('/2fa/verify', async (req: Request, res: Response) => {
     }
 
     if (!verified) {
-      return res.status(400).json({ error: 'Invalid 2FA token' });
+      res.status(400).json({ error: 'Invalid 2FA token' });
+      return;
     }
 
     res.json({ message: '2FA verification successful' });
@@ -355,7 +366,8 @@ router.post('/azure/login', async (req: Request, res: Response) => {
     const { accessToken } = req.body;
     
     if (!accessToken) {
-      return res.status(400).json({ error: 'Azure access token is required' });
+      res.status(400).json({ error: 'Azure access token is required' });
+      return;
     }
 
     // Verify Azure token with Microsoft Graph API
@@ -367,17 +379,25 @@ router.post('/azure/login', async (req: Request, res: Response) => {
     });
 
     if (!graphResponse.ok) {
-      return res.status(401).json({ error: 'Invalid Azure token' });
+      res.status(401).json({ error: 'Invalid Azure token' });
+      return;
     }
 
     const userData = await graphResponse.json();
-    
+    // Type assertion for userData from Microsoft Graph API
+    interface AzureUserData {
+      userPrincipalName?: string;
+      mail?: string;
+      givenName?: string;
+      surname?: string;
+    }
+    const azureUser = userData as AzureUserData;
     // Find or create user
     let user = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: userData.mail || userData.userPrincipalName },
-          { username: userData.userPrincipalName }
+          { email: azureUser.mail || azureUser.userPrincipalName },
+          { username: azureUser.userPrincipalName }
         ]
       }
     });
@@ -386,10 +406,10 @@ router.post('/azure/login', async (req: Request, res: Response) => {
       // Create new user from Azure AD
       user = await prisma.user.create({
         data: {
-          username: userData.userPrincipalName,
-          email: userData.mail || userData.userPrincipalName,
-          firstName: userData.givenName || '',
-          lastName: userData.surname || '',
+          username: azureUser.userPrincipalName || '',
+          email: azureUser.mail || azureUser.userPrincipalName || '',
+          firstName: azureUser.givenName || '',
+          lastName: azureUser.surname || '',
           passwordHash: '', // Azure users don't have passwords
           role: 'TECHNICIAN', // Default role
           companyId: req.body.companyId || 'default-company', // You might want to handle this differently
