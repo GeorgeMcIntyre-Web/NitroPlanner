@@ -171,12 +171,9 @@ const GanttChart = ({ tasks, project }: { tasks: GanttTask[], project: Project }
               <div className="flex-1 relative min-h-[60px] flex items-center">
                 <div className="absolute inset-0 flex items-center">
                   {task.start && task.end && (
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${width}%` }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className={`absolute h-8 ${taskColor} rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow`}
-                      style={{ left: `${left}%` }}
+                    <div
+                      className={`absolute h-8 ${taskColor} rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all duration-300`}
+                      style={{ left: `${left}%`, width: `${width}%` }}
                       onClick={() => setSelectedTask(task)}
                     >
                       <div className="flex items-center justify-between px-3 py-1 text-white text-xs">
@@ -191,7 +188,7 @@ const GanttChart = ({ tasks, project }: { tasks: GanttTask[], project: Project }
                           style={{ width: `${task.progress}%` }}
                         />
                       </div>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -300,6 +297,13 @@ export default function GanttPage() {
     const response = await api.get('/api/projects')
     return response.data
   })
+
+  // Auto-select first project if available
+  useEffect(() => {
+    if (projects && projects.length > 0 && !selectedProject) {
+      setSelectedProject(projects[0].id)
+    }
+  }, [projects, selectedProject])
 
   // Fetch gantt data
   const { data: ganttTasks } = useQuery<GanttTask[]>(

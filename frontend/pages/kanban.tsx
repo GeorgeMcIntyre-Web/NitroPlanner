@@ -13,6 +13,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline'
+import TaskCreateForm from '../components/TaskCreateForm'
+import Modal from '../components/ui/Modal'
 
 // API client
 const api = axios.create({
@@ -32,6 +34,11 @@ interface Task {
   actual_hours: number | null
   predicted_delay: number | null
   risk_score: number | null
+  started_at: string | null
+  completed_at: string | null
+  time_spent: number | null
+  efficiency_score: number | null
+  status: string
 }
 
 interface KanbanData {
@@ -50,7 +57,7 @@ interface Project {
 }
 
 // Kanban Column Component
-const KanbanColumn = ({ title, tasks, columnId, onTaskClick }: any) => {
+const KanbanColumn = ({ title, tasks, columnId, onTaskClick, onStartTask, onCompleteTask, onAddTask }: any) => {
   const getColumnColor = (columnId: string) => {
     switch (columnId) {
       case 'backlog': return 'bg-gray-100'
@@ -84,6 +91,16 @@ const KanbanColumn = ({ title, tasks, columnId, onTaskClick }: any) => {
           <span className="bg-white bg-opacity-50 px-2 py-1 rounded-full text-sm font-medium">
             {tasks.length}
           </span>
+          {/* Add Task button only for Backlog column */}
+          {columnId === 'backlog' && (
+            <button
+              onClick={onAddTask}
+              className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs flex items-center"
+              aria-label="Add Task"
+            >
+              <PlusIcon className="h-4 w-4 mr-1" /> Add Task
+            </button>
+          )}
         </div>
       </div>
       
@@ -99,14 +116,11 @@ const KanbanColumn = ({ title, tasks, columnId, onTaskClick }: any) => {
             {tasks.map((task: Task, index: number) => (
               <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
                 {(provided, snapshot) => (
-                  <motion.div
+                  <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.02 }}
-                    className={`mb-3 p-4 bg-white rounded-lg shadow-sm border-l-4 cursor-pointer ${
+                    className={`mb-3 p-4 bg-white rounded-lg shadow-sm border-l-4 cursor-pointer transition-all duration-200 hover:shadow-md ${
                       snapshot.isDragging ? 'shadow-lg' : ''
                     } ${
                       task.priority === 'high' ? 'border-l-red-500' :
@@ -115,45 +129,94 @@ const KanbanColumn = ({ title, tasks, columnId, onTaskClick }: any) => {
                     }`}
                     onClick={() => onTaskClick(task)}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
-                      {task.predicted_delay && task.predicted_delay > 0 && (
-                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                          +{task.predicted_delay}d
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                      {task.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center space-x-2">
-                        {task.assigned_to && (
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-                            {task.assigned_to}
+                    <div className="p-4">
+                      <h4 className="font-medium text-sm text-gray-900 mb-2">{task.name}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+                      
+                      {/* Time Tracking Information */}
+                      <div className="space-y-2 mb-3">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Estimated:</span>
+                          <span className="font-medium">{task.estimated_hours || 0}h</span>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Actual:</span>
+                          <span className="font-medium">{task.actual_hours || 0}h</span>
+                        </div>
+                        {task.time_spent && (
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Time Spent:</span>
+                            <span className="font-medium">{task.time_spent.toFixed(1)}h</span>
                           </div>
                         )}
-                        {task.estimated_hours && (
-                          <span>{task.estimated_hours}h</span>
+                        {task.efficiency_score && (
+                          <div className="flex justify-between text-xs">
+                            <span>Efficiency:</span>
+                            <span className={`font-medium ${
+                              task.efficiency_score >= 1.0 ? 'text-green-600' : 
+                              task.efficiency_score >= 0.8 ? 'text-yellow-600' : 'text-red-600'
+                            }`}>
+                              {(task.efficiency_score * 100).toFixed(0)}%
+                            </span>
+                          </div>
                         )}
                       </div>
                       
-                      <div className="flex items-center space-x-1">
-                        {task.risk_score && task.risk_score > 0.7 && (
-                          <ExclamationTriangleIcon className="h-4 w-4 text-red-500" />
-                        )}
-                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                      {/* Progress Bar */}
+                      <div className="flex items-center mb-3">
+                        <div className="flex-1 bg-gray-200 rounded-full h-2 mr-3">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full" 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
                             style={{ width: `${task.progress}%` }}
                           />
                         </div>
-                        <span>{task.progress}%</span>
+                        <span className="text-xs text-gray-500">{task.progress}%</span>
                       </div>
+                      
+                      {/* Task Metadata */}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded-full ${
+                            task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {task.priority}
+                          </span>
+                          {task.predicted_delay && task.predicted_delay > 0 && (
+                            <span className="text-red-600">+{task.predicted_delay.toFixed(1)}d</span>
+                          )}
+                        </div>
+                        {task.assigned_to && (
+                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            User {task.assigned_to}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Time Tracking Controls */}
+                      {task.status !== 'completed' && (
+                        <div className="mt-3 flex space-x-2">
+                          {task.status === 'pending' && (
+                            <button
+                              onClick={() => onStartTask(task.id)}
+                              className="flex-1 bg-green-600 text-white text-xs py-1 px-2 rounded hover:bg-green-700"
+                            >
+                              Start
+                            </button>
+                          )}
+                          {task.status === 'in_progress' && (
+                            <button
+                              onClick={() => onCompleteTask(task.id)}
+                              className="flex-1 bg-blue-600 text-white text-xs py-1 px-2 rounded hover:bg-blue-700"
+                            >
+                              Complete
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </Draggable>
             ))}
@@ -305,6 +368,7 @@ export default function KanbanBoard() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [taskLoading, setTaskLoading] = useState(false)
   const [socket, setSocket] = useState<Socket | null>(null)
   const queryClient = useQueryClient()
 
@@ -313,6 +377,13 @@ export default function KanbanBoard() {
     const response = await api.get('/api/projects')
     return response.data
   })
+
+  // Auto-select first project if available
+  useEffect(() => {
+    if (projects && projects.length > 0 && !selectedProject) {
+      setSelectedProject(projects[0].id)
+    }
+  }, [projects, selectedProject])
 
   // Fetch kanban data
   const { data: kanbanData, refetch: refetchKanban } = useQuery<KanbanData>(
@@ -324,6 +395,27 @@ export default function KanbanBoard() {
     },
     { enabled: !!selectedProject }
   )
+
+  // Task action handlers
+  const handleStartTask = async (taskId: number) => {
+    try {
+      await api.post(`/api/tasks/${taskId}/start`)
+      refetchKanban()
+      toast.success('Task started successfully')
+    } catch (error) {
+      toast.error('Failed to start task')
+    }
+  }
+
+  const handleCompleteTask = async (taskId: number) => {
+    try {
+      await api.post(`/api/tasks/${taskId}/complete`)
+      refetchKanban()
+      toast.success('Task completed successfully')
+    } catch (error) {
+      toast.error('Failed to complete task')
+    }
+  }
 
   // WebSocket connection
   useEffect(() => {
@@ -373,6 +465,18 @@ export default function KanbanBoard() {
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task)
     setIsTaskModalOpen(true)
+  }
+
+  // Add Task handler
+  const handleAddTask = () => setIsTaskModalOpen(true)
+  const handleTaskCreate = async (data: any) => {
+    setTaskLoading(true)
+    // Placeholder for API call
+    await new Promise((res) => setTimeout(res, 1000))
+    setTaskLoading(false)
+    setIsTaskModalOpen(false)
+    toast.success('Task created!')
+    refetchKanban()
   }
 
   if (!projects || projects.length === 0) {
@@ -426,30 +530,41 @@ export default function KanbanBoard() {
                 tasks={kanbanData.backlog}
                 columnId="backlog"
                 onTaskClick={handleTaskClick}
+                onStartTask={handleStartTask}
+                onCompleteTask={handleCompleteTask}
+                onAddTask={handleAddTask}
               />
               <KanbanColumn
                 title="To Do"
                 tasks={kanbanData.todo}
                 columnId="todo"
                 onTaskClick={handleTaskClick}
+                onStartTask={handleStartTask}
+                onCompleteTask={handleCompleteTask}
               />
               <KanbanColumn
                 title="In Progress"
                 tasks={kanbanData.in_progress}
                 columnId="in_progress"
                 onTaskClick={handleTaskClick}
+                onStartTask={handleStartTask}
+                onCompleteTask={handleCompleteTask}
               />
               <KanbanColumn
                 title="Review"
                 tasks={kanbanData.review}
                 columnId="review"
                 onTaskClick={handleTaskClick}
+                onStartTask={handleStartTask}
+                onCompleteTask={handleCompleteTask}
               />
               <KanbanColumn
                 title="Done"
                 tasks={kanbanData.done}
                 columnId="done"
                 onTaskClick={handleTaskClick}
+                onStartTask={handleStartTask}
+                onCompleteTask={handleCompleteTask}
               />
             </div>
           </DragDropContext>
@@ -466,6 +581,20 @@ export default function KanbanBoard() {
         }}
         onUpdate={refetchKanban}
       />
+
+      {/* Task Create Modal */}
+      <Modal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        title="Create New Task"
+        size="md"
+      >
+        <TaskCreateForm
+          onSubmit={handleTaskCreate}
+          onCancel={() => setIsTaskModalOpen(false)}
+          loading={taskLoading}
+        />
+      </Modal>
     </div>
   )
 } 
