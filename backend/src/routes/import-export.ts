@@ -1,3 +1,4 @@
+/// <reference types="express" />
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
@@ -41,10 +42,10 @@ const upload = multer({
 });
 
 // Export Projects
-router.get('/export/projects', authenticateToken, async (req: Request, res: Response) => {
+router.get('/export/projects', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const projects = await prisma.project.findMany({
-      where: { companyId: req.user.companyId },
+      where: { companyId: (req as any).user.companyId },
       include: {
         tasks: {
           include: {
@@ -76,7 +77,7 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
 
     const exportData = {
       exportDate: new Date().toISOString(),
-      companyId: req.user.companyId,
+      companyId: (req as any).user.companyId,
       projects: projects.map(project => ({
         id: project.id,
         name: project.name,
@@ -144,11 +145,11 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
 });
 
 // Export Work Units
-router.get('/export/work-units', authenticateToken, async (req: Request, res: Response) => {
+router.get('/export/work-units', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const workUnits = await prisma.workUnit.findMany({
       where: {
-        project: { companyId: req.user.companyId }
+        project: { companyId: (req as any).user.companyId }
       },
       include: {
         project: {
@@ -183,7 +184,7 @@ router.get('/export/work-units', authenticateToken, async (req: Request, res: Re
 
     const exportData = {
       exportDate: new Date().toISOString(),
-      companyId: req.user.companyId,
+      companyId: (req as any).user.companyId,
       workUnits: workUnits.map(workUnit => ({
         id: workUnit.id,
         name: workUnit.name,
@@ -252,20 +253,20 @@ router.get('/export/work-units', authenticateToken, async (req: Request, res: Re
 });
 
 // Export Templates
-router.get('/export/templates', authenticateToken, async (req: Request, res: Response) => {
+router.get('/export/templates', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const [processTemplates, designTemplates] = await Promise.all([
       prisma.processTemplate.findMany({
-        where: { companyId: req.user.companyId }
+        where: { companyId: (req as any).user.companyId }
       }),
       prisma.designTemplate.findMany({
-        where: { companyId: req.user.companyId }
+        where: { companyId: (req as any).user.companyId }
       })
     ]);
 
     const exportData = {
       exportDate: new Date().toISOString(),
-      companyId: req.user.companyId,
+      companyId: (req as any).user.companyId,
       processTemplates,
       designTemplates
     };
@@ -280,10 +281,11 @@ router.get('/export/templates', authenticateToken, async (req: Request, res: Res
 });
 
 // Import Projects
-router.post('/import/projects', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/import/projects', authenticateToken, upload.single('file'), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
     }
 
     const filePath = req.file.path;
@@ -292,7 +294,8 @@ router.post('/import/projects', authenticateToken, upload.single('file'), async 
 
     // Validate import data structure
     if (!importData.projects || !Array.isArray(importData.projects)) {
-      return res.status(400).json({ error: 'Invalid file format. Expected projects array.' });
+      res.status(400).json({ error: 'Invalid file format. Expected projects array.' });
+      return;
     }
 
     const results = {
@@ -313,8 +316,8 @@ router.post('/import/projects', authenticateToken, upload.single('file'), async 
             endDate: projectData.endDate ? new Date(projectData.endDate) : null,
             progress: projectData.progress || 0,
             budget: projectData.budget || 0,
-            companyId: req.user.companyId,
-            createdById: req.user.id
+            companyId: (req as any).user.companyId,
+            createdById: (req as any).user.id
           }
         });
 
@@ -334,7 +337,7 @@ router.post('/import/projects', authenticateToken, upload.single('file'), async 
                 dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
                 projectId: project.id,
                 assignedToId: taskData.assignedTo?.id || null,
-                createdById: req.user.id
+                createdById: (req as any).user.id
               }
             });
           }
@@ -363,7 +366,7 @@ router.post('/import/projects', authenticateToken, upload.single('file'), async 
                 confidence: workUnitData.confidence || null,
                 projectId: project.id,
                 assignedToId: workUnitData.assignedTo?.id || null,
-                createdById: req.user.id
+                createdById: (req as any).user.id
               }
             });
 
@@ -412,10 +415,11 @@ router.post('/import/projects', authenticateToken, upload.single('file'), async 
 });
 
 // Import Templates
-router.post('/import/templates', authenticateToken, upload.single('file'), async (req: Request, res: Response) => {
+router.post('/import/templates', authenticateToken, upload.single('file'), async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
     }
 
     const filePath = req.file.path;
@@ -440,7 +444,7 @@ router.post('/import/templates', authenticateToken, upload.single('file'), async
               workUnitType: templateData.workUnitType,
               templateData: templateData.templateData,
               isActive: templateData.isActive !== false,
-              companyId: req.user.companyId
+              companyId: (req as any).user.companyId
             }
           });
           results.processTemplates.imported++;
@@ -464,7 +468,7 @@ router.post('/import/templates', authenticateToken, upload.single('file'), async
               industry: templateData.industry || null,
               templateData: templateData.templateData,
               isActive: templateData.isActive !== false,
-              companyId: req.user.companyId
+              companyId: (req as any).user.companyId
             }
           });
           results.designTemplates.imported++;
