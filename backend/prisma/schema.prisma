@@ -68,6 +68,12 @@ model User {
   reviewedDesigns     DesignReview[]     @relation("DesignReviewer")
   bomExtractionJobs   BOMExtractionJob[] @relation("BOMExtractionCreator")
 
+  // New relations for collaboration
+  comments             Comment[]
+  collaborationSessions CollaborationSession[]
+  liveEdits            LiveEdit[]
+  auditLogs            AuditLog[]
+
   @@map("users")
 }
 
@@ -106,6 +112,10 @@ model Project {
   bomExtractionJobs         BOMExtractionJob[]
   billOfMaterials           BillOfMaterials[]
   manufacturingInstructions ManufacturingInstruction[]
+
+  // New relations for collaboration
+  comments             Comment[]
+  collaborationSessions CollaborationSession[]
 
   @@map("projects")
 }
@@ -258,6 +268,10 @@ model Task {
 
   taskDependencies TaskDependency[] @relation("TaskDependency")
   dependentTasks   TaskDependency[] @relation("DependentTask")
+
+  // New relations for collaboration
+  comments   Comment[]
+  liveEdits  LiveEdit[]
 
   @@map("tasks")
 }
@@ -594,4 +608,79 @@ model ManufacturingStep {
   instruction   ManufacturingInstruction @relation(fields: [instructionId], references: [id], onDelete: Cascade)
 
   @@map("manufacturing_steps")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String?
+  projectId String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  parentId  String?     // For threaded comments
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   Comment[] @relation("CommentReplies")
+  
+  @@index([taskId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model CollaborationSession {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  isActive  Boolean  @default(true)
+  
+  // Relations
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([projectId])
+  @@index([userId])
+}
+
+model LiveEdit {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  field     String   // 'name', 'description', 'priority', etc.
+  oldValue  String?
+  newValue  String?
+  timestamp DateTime @default(now())
+  
+  // Relations
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([taskId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String   // 'create', 'update', 'delete', 'login', etc.
+  resource    String   // 'task', 'project', 'user', etc.
+  resourceId  String?
+  details     Json?    // Additional details about the action
+  ipAddress   String?
+  userAgent   String?
+  timestamp   DateTime @default(now())
+  
+  // Relations
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([timestamp])
 }
