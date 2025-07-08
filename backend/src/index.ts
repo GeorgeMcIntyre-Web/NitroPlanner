@@ -1,14 +1,22 @@
+console.log('🔥 BACKEND SERVER STARTED - THIS IS THE REAL ONE!');
 import express from 'express';
 import bodyParser from 'body-parser';
-import { usersRouter, projectsRouter } from './routes';
+import cors from 'cors';
+import { usersRouter, projectsRouter, authRouter } from './routes';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 app.use('/api/users', usersRouter);
 app.use('/api/projects', projectsRouter);
+console.log('IMPORTING AUTH ROUTES');
+app.use('/api/auth', authRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

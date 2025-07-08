@@ -6,7 +6,28 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Create sample company
+  // Delete all data from relevant tables (order matters for foreign keys)
+  await prisma.manufacturingStep.deleteMany();
+  await prisma.manufacturingInstruction.deleteMany();
+  await prisma.bOMComponent.deleteMany();
+  await prisma.billOfMaterials.deleteMany();
+  await prisma.cADExtractionTemplate.deleteMany();
+  await prisma.cADSoftware.deleteMany();
+  await prisma.processTemplate.deleteMany();
+  await prisma.designTemplate.deleteMany();
+  await prisma.designReview.deleteMany();
+  await prisma.designVersion.deleteMany();
+  await prisma.designFile.deleteMany();
+  await prisma.monteCarloSimulation.deleteMany();
+  await prisma.taskDependency.deleteMany();
+  await prisma.task.deleteMany();
+  await prisma.checkpoint.deleteMany();
+  await prisma.workUnit.deleteMany();
+  await prisma.project.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.company.deleteMany();
+
+  // Create sample company (use create, not upsert, since we delete all companies above)
   const company = await prisma.company.create({
     data: {
       name: 'Automotive Solutions Inc.',
@@ -24,13 +45,15 @@ async function main() {
 
   console.log('✅ Created company:', company.name);
 
-  // Create sample users
+  // Upsert sample users
   const users = await Promise.all([
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: 'admin@autosolutions.com' },
+      update: {},
+      create: {
         email: 'admin@autosolutions.com',
         username: 'admin',
-        password: await hashPassword('password123'),
+        passwordHash: await hashPassword('password123'),
         firstName: 'John',
         lastName: 'Admin',
         role: 'project_manager',
@@ -38,11 +61,13 @@ async function main() {
         companyId: company.id
       }
     }),
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: 'designer@autosolutions.com' },
+      update: {},
+      create: {
         email: 'designer@autosolutions.com',
         username: 'designer',
-        password: await hashPassword('password123'),
+        passwordHash: await hashPassword('password123'),
         firstName: 'Sarah',
         lastName: 'Designer',
         role: 'mechanical_designer',
@@ -50,11 +75,13 @@ async function main() {
         companyId: company.id
       }
     }),
-    prisma.user.create({
-      data: {
+    prisma.user.upsert({
+      where: { email: 'engineer@autosolutions.com' },
+      update: {},
+      create: {
         email: 'engineer@autosolutions.com',
         username: 'engineer',
-        password: await hashPassword('password123'),
+        passwordHash: await hashPassword('password123'),
         firstName: 'Mike',
         lastName: 'Engineer',
         role: 'simulation_engineer',

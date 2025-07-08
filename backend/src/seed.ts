@@ -1,36 +1,50 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Create demo users
+  // Create demo company
+  const demoCompany = await prisma.company.create({
+    data: {
+      name: 'Demo Company',
+      subscriptionTier: 'basic',
+    },
+  });
+
+  // Hash the password
+  const hashedPassword = await bcrypt.hash('demo123', 10);
+
+  // Create demo user
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@nitroplanner.com' },
-    update: {},
+    update: {
+      password: hashedPassword,
+    },
     create: {
       username: 'demo',
       email: 'demo@nitroplanner.com',
-      passwordHash: 'demo123', // In production, use a hashed password!
+      password: hashedPassword, // Now using a hashed password
       role: 'PROJECT_MANAGER',
       firstName: 'Demo',
       lastName: 'User',
+      companyId: demoCompany.id,
     },
   });
 
   // Create a sample project
-  const project = await prisma.project.upsert({
-    where: { name: 'Sample Project' },
-    update: {},
-    create: {
+  const project = await prisma.project.create({
+    data: {
       name: 'Sample Project',
       description: 'A demo project for NitroPlanner',
       status: 'active',
       priority: 'medium',
-      createdBy: demoUser.id,
+      companyId: demoCompany.id,
+      createdById: demoUser.id,
     },
   });
 
-  console.log('Seeded demo user and project:', { demoUser, project });
+  console.log('Seeded demo user and project:', demoUser.email, project.name);
 }
 
 main()
@@ -40,4 +54,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  }); 
+  });

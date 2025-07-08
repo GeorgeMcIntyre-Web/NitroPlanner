@@ -1,0 +1,19 @@
+1. Having the boards all in one place where the user can decide what type he would like to look at.
+2. How will the user setup and work with the Work Units? I need to understand this in terms and workflow and also how
+the templates will connect to each other. They need to be able to automatically connect either with an analytical or itrative
+algorithm.
+3. Import/Export GUI feature for all relevant items.
+4. 2FA.
+5. Lets focus on getting a working demo showing the concept of AI planning.
+6. Mobile, would like to just ensure the GUI knows it mobile and resizes accordingly. This applies to any device.
+7. Azure login.
+8. Tracking all analitics to be able to predict the values in the future based on previous values.
+
+
+
+Always Resilient 
+Fault-Tolerant
+Stable 
+Hardened 
+Production-Ready
+Never use work arounds

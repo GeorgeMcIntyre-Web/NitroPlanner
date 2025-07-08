@@ -1,11 +1,11 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const router = Router();
 
 // GET /api/templates - List all templates
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   // TODO: Add filtering, pagination, auth
   const templates = await prisma.processTemplate.findMany({
     include: { steps: true }
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/templates - Create a new template
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   // TODO: Validate input, get user from auth
   const { name, description, createdBy } = req.body;
   const template = await prisma.processTemplate.create({
@@ -24,7 +24,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /api/templates/:id - Get a template with steps
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   const template = await prisma.processTemplate.findUnique({
     where: { id },
@@ -35,7 +35,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/templates/:id/steps - Add a step to a template
-router.post('/:id/steps', async (req, res) => {
+router.post('/:id/steps', async (req: Request, res: Response) => {
   const templateId = Number(req.params.id);
   const { stepName, sequenceOrder, baselineTimeHours, assignmentType, assignedRoleId, assignedMachineId, dependencyStepId } = req.body;
   const step = await prisma.templateStep.create({
@@ -54,7 +54,7 @@ router.post('/:id/steps', async (req, res) => {
 });
 
 // PUT /api/templates/steps/:step_id - Update a step
-router.put('/steps/:step_id', async (req, res) => {
+router.put('/steps/:step_id', async (req: Request, res: Response) => {
   const id = Number(req.params.step_id);
   const data = req.body;
   const step = await prisma.templateStep.update({
@@ -65,14 +65,14 @@ router.put('/steps/:step_id', async (req, res) => {
 });
 
 // DELETE /api/templates/steps/:step_id - Delete a step
-router.delete('/steps/:step_id', async (req, res) => {
+router.delete('/steps/:step_id', async (req: Request, res: Response) => {
   const id = Number(req.params.step_id);
   await prisma.templateStep.delete({ where: { id } });
   res.status(204).end();
 });
 
 // POST /api/projects/:proj_id/apply-template/:template_id - Apply template to project
-router.post('/apply-template', async (req, res) => {
+router.post('/apply-template', async (req: Request, res: Response) => {
   // TODO: Implement logic to create project steps/tasks from template
   res.status(501).json({ message: 'Not implemented yet' });
 });

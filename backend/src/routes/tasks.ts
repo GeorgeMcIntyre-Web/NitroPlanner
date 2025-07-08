@@ -1,11 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { Request, Response } from 'express';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all tasks
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const tasks = await prisma.task.findMany({
       include: {
@@ -33,7 +34,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get task by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const taskId = parseInt(req.params.id);
     const task = await prisma.task.findUnique({
@@ -68,7 +69,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new task
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, description, projectId, assignedTo, priority, status, kanbanColumn, estimatedHours, dueDate } = req.body;
 
@@ -110,7 +111,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update task
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const taskId = parseInt(req.params.id);
     const { name, description, assignedTo, priority, status, kanbanColumn, estimatedHours, actualHours, progress, dueDate, startDate, completedDate } = req.body;
@@ -157,7 +158,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete task
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const taskId = parseInt(req.params.id);
     await prisma.task.delete({

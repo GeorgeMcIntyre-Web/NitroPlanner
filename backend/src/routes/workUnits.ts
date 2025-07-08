@@ -1,11 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { Request, Response } from 'express';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all work units
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const workUnits = await prisma.workUnit.findMany({
       include: {
@@ -26,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get work unit by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const workUnitId = parseInt(req.params.id);
     const workUnit = await prisma.workUnit.findUnique({
@@ -54,7 +55,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new work unit
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { name, description, projectId, unitType, estimatedDuration, assignedTo, startDate } = req.body;
 
@@ -87,7 +88,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update work unit
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const workUnitId = parseInt(req.params.id);
     const { name, description, unitType, estimatedDuration, actualDuration, status, assignedTo, startDate, completedDate } = req.body;
@@ -124,7 +125,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete work unit
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const workUnitId = parseInt(req.params.id);
     await prisma.workUnit.delete({
