@@ -3,6 +3,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { usersRouter, projectsRouter, authRouter } from './routes';
+import importExportRouter from './routes/import-export';
+import analyticsRouter from './routes/analytics';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,10 +15,15 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 
+// Core routes
 app.use('/api/users', usersRouter);
 app.use('/api/projects', projectsRouter);
 console.log('IMPORTING AUTH ROUTES');
 app.use('/api/auth', authRouter);
+
+// New feature routes
+app.use('/api/import-export', importExportRouter);
+app.use('/api/analytics', analyticsRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

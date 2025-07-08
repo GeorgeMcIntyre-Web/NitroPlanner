@@ -5,6 +5,8 @@ import { PrismaClient } from '@prisma/client';
 import { Request, Response } from 'express';
 import { body } from 'express-validator';
 import { validationResult } from 'express-validator';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -158,6 +160,277 @@ router.post('/login', async (req: Request, res: Response) => {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// 2FA Setup - Generate secret and QR code
+router.post('/2fa/setup', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Generate secret
+    const secret = speakeasy.generateSecret({
+      name: 'NitroPlanner',
+      issuer: 'NitroPlanner',
+      length: 32
+    });
+
+    // Generate QR code
+    const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
+
+    // Generate backup codes
+    const backupCodes = Array.from({ length: 10 }, () => 
+      Math.random().toString(36).substring(2, 8).toUpperCase()
+    );
+
+    // Update user with secret and backup codes
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorSecret: secret.base32,
+        backupCodes: backupCodes
+      }
+    });
+
+    res.json({
+      secret: secret.base32,
+      qrCodeUrl,
+      backupCodes,
+      message: '2FA setup initiated. Scan QR code with authenticator app.'
+    });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    res.status(500).json({ error: 'Failed to setup 2FA' });
+  }
+});
+
+// 2FA Enable - Verify token and enable 2FA
+router.post('/2fa/enable', async (req: Request, res: Response) => {
+  try {
+    const { userId, token } = req.body;
+    
+    if (!userId || !token) {
+      return res.status(400).json({ error: 'User ID and token are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'User not found or 2FA not setup' });
+    }
+
+    // Verify token
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: token,
+      window: 2
+    });
+
+    if (!verified) {
+      return res.status(400).json({ error: 'Invalid 2FA token' });
+    }
+
+    // Enable 2FA
+    await prisma.user.update({
+      where: { id: userId },
+      data: { twoFactorEnabled: true }
+    });
+
+    res.json({ message: '2FA enabled successfully' });
+  } catch (error) {
+    console.error('2FA enable error:', error);
+    res.status(500).json({ error: 'Failed to enable 2FA' });
+  }
+});
+
+// 2FA Disable
+router.post('/2fa/disable', async (req: Request, res: Response) => {
+  try {
+    const { userId, token } = req.body;
+    
+    if (!userId || !token) {
+      return res.status(400).json({ error: 'User ID and token are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || !user.twoFactorSecret) {
+      return res.status(400).json({ error: 'User not found or 2FA not setup' });
+    }
+
+    // Verify token
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token: token,
+      window: 2
+    });
+
+    if (!verified) {
+      return res.status(400).json({ error: 'Invalid 2FA token' });
+    }
+
+    // Disable 2FA
+    await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        backupCodes: null
+      }
+    });
+
+    res.json({ message: '2FA disabled successfully' });
+  } catch (error) {
+    console.error('2FA disable error:', error);
+    res.status(500).json({ error: 'Failed to disable 2FA' });
+  }
+});
+
+// 2FA Verify - For login
+router.post('/2fa/verify', async (req: Request, res: Response) => {
+  try {
+    const { userId, token, isBackupCode = false } = req.body;
+    
+    if (!userId || !token) {
+      return res.status(400).json({ error: 'User ID and token are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || !user.twoFactorEnabled) {
+      return res.status(400).json({ error: 'User not found or 2FA not enabled' });
+    }
+
+    let verified = false;
+
+    if (isBackupCode) {
+      // Verify backup code
+      const backupCodes = user.backupCodes as string[] || [];
+      const codeIndex = backupCodes.indexOf(token);
+      
+      if (codeIndex !== -1) {
+        // Remove used backup code
+        backupCodes.splice(codeIndex, 1);
+        await prisma.user.update({
+          where: { id: userId },
+          data: { backupCodes: backupCodes }
+        });
+        verified = true;
+      }
+    } else {
+      // Verify TOTP token
+      verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret!,
+        encoding: 'base32',
+        token: token,
+        window: 2
+      });
+    }
+
+    if (!verified) {
+      return res.status(400).json({ error: 'Invalid 2FA token' });
+    }
+
+    res.json({ message: '2FA verification successful' });
+  } catch (error) {
+    console.error('2FA verify error:', error);
+    res.status(500).json({ error: 'Failed to verify 2FA' });
+  }
+});
+
+// Azure AD Authentication
+router.post('/azure/login', async (req: Request, res: Response) => {
+  try {
+    const { accessToken } = req.body;
+    
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Azure access token is required' });
+    }
+
+    // Verify Azure token with Microsoft Graph API
+    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!graphResponse.ok) {
+      return res.status(401).json({ error: 'Invalid Azure token' });
+    }
+
+    const userData = await graphResponse.json();
+    
+    // Find or create user
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: userData.mail || userData.userPrincipalName },
+          { username: userData.userPrincipalName }
+        ]
+      }
+    });
+
+    if (!user) {
+      // Create new user from Azure AD
+      user = await prisma.user.create({
+        data: {
+          username: userData.userPrincipalName,
+          email: userData.mail || userData.userPrincipalName,
+          firstName: userData.givenName || '',
+          lastName: userData.surname || '',
+          passwordHash: '', // Azure users don't have passwords
+          role: 'TECHNICIAN', // Default role
+          companyId: req.body.companyId || 'default-company', // You might want to handle this differently
+          isActive: true
+        }
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user.id, username: user.username, role: user.role },
+      process.env.JWT_SECRET || 'fallback-secret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Azure login successful',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      },
+      access_token: token,
+      refresh_token: token
+    });
+  } catch (error) {
+    console.error('Azure login error:', error);
+    res.status(500).json({ error: 'Azure authentication failed' });
+  }
+});
+
+// Azure AD configuration endpoint
+router.get('/azure/config', (req: Request, res: Response) => {
+  res.json({
+    clientId: process.env.AZURE_CLIENT_ID,
+    tenantId: process.env.AZURE_TENANT_ID,
+    redirectUri: process.env.AZURE_REDIRECT_URI
+  });
 });
 
 export default router; 
