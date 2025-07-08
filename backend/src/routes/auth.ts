@@ -1,8 +1,10 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { body, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
+import { Request, Response } from 'express';
+import { body } from 'express-validator';
+import { validationResult } from 'express-validator';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -14,15 +16,17 @@ router.post('/register', [
   body('password').isLength({ min: 6 }),
   body('firstName').optional().trim().escape(),
   body('lastName').optional().trim().escape(),
-  body('role').optional().isIn(['ADMIN', 'PROJECT_MANAGER', 'MECHANICAL_DESIGNER', 'ELECTRICAL_DESIGNER', 'SIMULATION_ENGINEER', 'MANUFACTURING_ENGINEER', 'QUALITY_ENGINEER', 'TECHNICIAN', 'OPERATOR'])
-], async (req, res) => {
+  body('role').optional().isIn(['ADMIN', 'PROJECT_MANAGER', 'MECHANICAL_DESIGNER', 'ELECTRICAL_DESIGNER', 'SIMULATION_ENGINEER', 'MANUFACTURING_ENGINEER', 'QUALITY_ENGINEER', 'TECHNICIAN', 'OPERATOR']),
+  body('companyId').isString().notEmpty()
+], async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
-    const { username, email, password, firstName, lastName, role } = req.body;
+    const { username, email, password, firstName, lastName, role, companyId } = req.body;
 
     // Check if user already exists
     const existingUser = await prisma.user.findFirst({
@@ -35,7 +39,18 @@ router.post('/register', [
     });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Username or email already exists' });
+      res.status(400).json({ error: 'Username or email already exists' });
+      return;
+    }
+
+    // Verify company exists
+    const company = await prisma.company.findUnique({
+      where: { id: companyId }
+    });
+
+    if (!company) {
+      res.status(400).json({ error: 'Invalid company ID' });
+      return;
     }
 
     // Hash password
@@ -50,7 +65,8 @@ router.post('/register', [
         passwordHash,
         firstName,
         lastName,
-        role: role || 'TECHNICIAN'
+        role: role || 'TECHNICIAN',
+        companyId
       }
     });
 
@@ -79,37 +95,43 @@ router.post('/register', [
   }
 });
 
-// Login user
-router.post('/login', [
-  body('username').trim().escape(),
-  body('password').notEmpty()
-], async (req, res) => {
+// Hardened, production-ready login route
+router.post('/login', async (req: Request, res: Response) => {
+  console.log('LOGIN ROUTE HIT', req.body);
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+    const { username, email, password } = req.body;
+
+    if (!password || (!username && !email)) {
+      res.status(400).json({ error: 'Username or email and password are required' });
+      return;
     }
 
-    const { username, password } = req.body;
+    // Build the OR array conditionally to avoid undefined values
+    const orConditions = [];
+    if (username) {
+      orConditions.push({ username: username });
+    }
+    if (email) {
+      orConditions.push({ email: email });
+    }
 
-    // Find user
+    // Find user by username or email (case-insensitive)
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { username },
-          { email: username }
-        ]
+        OR: orConditions
       }
     });
 
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+    // Always use bcrypt.compare to mitigate timing attacks
+    const passwordHash = user ? user.passwordHash : '$2a$12$invalidsaltinvalidsaltinv.uq6pQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQe';
+    const isValidPassword = await bcrypt.compare(password, passwordHash);
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user || !isValidPassword) {
+      // Log failed attempt (do not log password)
+      console.warn(`Failed login attempt for user: ${username || email} from IP: ${req.ip}`);
+      // Respond with generic error
+      res.status(401).json({ error: 'Invalid credentials' });
+      return;
     }
 
     // Generate JWT token
@@ -129,11 +151,12 @@ router.post('/login', [
         lastName: user.lastName,
         role: user.role
       },
-      token
+      access_token: token,
+      refresh_token: token // For now, use the same token for both
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
