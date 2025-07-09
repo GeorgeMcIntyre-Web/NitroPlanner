@@ -4,7 +4,7 @@
 Write-Host "🧪 Testing Digital Twin System..." -ForegroundColor Cyan
 
 # Base URL for the API
-$baseUrl = "http://localhost:3001"
+$baseUrl = "http://localhost:5000"
 
 # Test 1: Check if the server is running
 Write-Host "`n1. Testing server connectivity..." -ForegroundColor Yellow

@@ -24,6 +24,11 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
+    "/digital-twin": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/digital-twin.js"
+    ],
     "/login": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",

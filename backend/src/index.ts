@@ -27,7 +27,8 @@ app.use('/api/import-export', importExportRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/digital-twin', digitalTwinRouter);
 
-app.get('/api/health', (req, res) => {
+// Health check endpoint for test scripts and monitoring
+app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
