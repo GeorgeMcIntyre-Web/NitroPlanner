@@ -14,7 +14,8 @@ router.get('/me', authenticateToken, async (req: Request, res: Response, next: N
   try {
     const userId = (req as any).user.id;
 
-    const digitalTwin = await prisma.user.findUnique({
+    // Get basic user data first
+    const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
         company: {
@@ -23,42 +24,11 @@ router.get('/me', authenticateToken, async (req: Request, res: Response, next: N
             name: true,
             industry: true
           }
-        },
-        professionalProfile: true,
-        skills: {
-          orderBy: { level: 'desc' }
-        },
-        certifications: {
-          where: { status: 'active' }
-        },
-        availability: true,
-        workloadCapacity: true,
-        performanceMetrics: true,
-        learningPath: true,
-        assignedWorkUnits: {
-          where: {
-            status: { in: ['pending', 'in_progress'] }
-          },
-          include: {
-            project: {
-              select: { name: true }
-            }
-          }
-        },
-        assignedTasks: {
-          where: {
-            status: { in: ['pending', 'in_progress'] }
-          },
-          include: {
-            project: {
-              select: { name: true }
-            }
-          }
         }
       }
     });
 
-    if (!digitalTwin) {
+    if (!user) {
       res.status(404).json({
         error: 'User not found',
         message: 'Digital twin profile not found'
@@ -66,31 +36,71 @@ router.get('/me', authenticateToken, async (req: Request, res: Response, next: N
       return;
     }
 
+    // Get Digital Twin data separately to avoid TypeScript issues
+    const [professionalProfile, skills, certifications, availability, workloadCapacity, performanceMetrics, learningPath] = await Promise.all([
+      prisma.professionalProfile.findUnique({ where: { userId } }),
+      prisma.skill.findMany({ where: { userId }, orderBy: { level: 'desc' } }),
+      prisma.certification.findMany({ where: { userId, status: 'active' } }),
+      prisma.availability.findUnique({ where: { userId } }),
+      prisma.workloadCapacity.findUnique({ where: { userId } }),
+      prisma.performanceMetrics.findUnique({ where: { userId } }),
+      prisma.learningPath.findUnique({ where: { userId } })
+    ]);
+
+    // Get current work
+    const [assignedWorkUnits, assignedTasks] = await Promise.all([
+      prisma.workUnit.findMany({
+        where: {
+          assignedToId: userId,
+          status: { in: ['pending', 'in_progress'] }
+        },
+        include: {
+          project: { select: { name: true } }
+        }
+      }),
+      prisma.task.findMany({
+        where: {
+          assignedToId: userId,
+          status: { in: ['pending', 'in_progress'] }
+        },
+        include: {
+          project: { select: { name: true } }
+        }
+      })
+    ]);
+
     // Calculate comprehensive metrics
-    const metrics = calculateDigitalTwinMetrics(digitalTwin);
+    const metrics = calculateDigitalTwinMetrics({
+      assignedWorkUnits,
+      assignedTasks,
+      availability,
+      workloadCapacity,
+      performanceMetrics,
+      skills
+    });
 
     res.json({
       message: 'Digital twin profile retrieved successfully',
       digitalTwin: {
         user: {
-          id: digitalTwin.id,
-          firstName: digitalTwin.firstName,
-          lastName: digitalTwin.lastName,
-          role: digitalTwin.role,
-          department: digitalTwin.department,
-          email: digitalTwin.email
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          department: user.department,
+          email: user.email
         },
-        company: (digitalTwin as any).company,
-        professionalProfile: (digitalTwin as any).professionalProfile,
-        skills: (digitalTwin as any).skills,
-        certifications: (digitalTwin as any).certifications,
-        availability: (digitalTwin as any).availability,
-        workloadCapacity: (digitalTwin as any).workloadCapacity,
-        performanceMetrics: (digitalTwin as any).performanceMetrics,
-        learningPath: (digitalTwin as any).learningPath,
+        company: user.company,
+        professionalProfile,
+        skills,
+        certifications,
+        availability,
+        workloadCapacity,
+        performanceMetrics,
+        learningPath,
         currentWork: {
-          workUnits: (digitalTwin as any).assignedWorkUnits,
-          tasks: (digitalTwin as any).assignedTasks
+          workUnits: assignedWorkUnits,
+          tasks: assignedTasks
         },
         metrics
       }
@@ -632,7 +642,20 @@ router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res:
       }
     });
 
-    const alerts = [];
+    const alerts: {
+      type: string;
+      severity: string;
+      user: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        role: string;
+      };
+      message: string;
+      recommendation: string;
+      currentWorkload: number;
+      maxCapacity: number;
+    }[] = [];
 
     overloadedMembers.forEach(member => {
       const currentWorkload = (member as any).assignedWorkUnits.length + (member as any).assignedTasks.length;
@@ -645,11 +668,11 @@ router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res:
           severity: 'high',
           user: {
             id: member.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            role: member.role
+            firstName: member.firstName || '',
+            lastName: member.lastName || '',
+            role: member.role || ''
           },
-          message: `${member.firstName} ${member.lastName} is at ${Math.round(utilization)}% capacity`,
+          message: `${member.firstName || 'User'} ${member.lastName || ''} is at ${Math.round(utilization)}% capacity`,
           recommendation: 'Consider redistributing work or delaying new assignments',
           currentWorkload,
           maxCapacity
@@ -660,11 +683,11 @@ router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res:
           severity: 'medium',
           user: {
             id: member.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            role: member.role
+            firstName: member.firstName || '',
+            lastName: member.lastName || '',
+            role: member.role || ''
           },
-          message: `${member.firstName} ${member.lastName} is at ${Math.round(utilization)}% capacity`,
+          message: `${member.firstName || 'User'} ${member.lastName || ''} is at ${Math.round(utilization)}% capacity`,
           recommendation: 'Monitor workload and plan assignments carefully',
           currentWorkload,
           maxCapacity
@@ -689,19 +712,19 @@ router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res:
 // HELPER FUNCTIONS
 // ============================================================================
 
-function calculateDigitalTwinMetrics(user: any) {
-  const currentWorkload = user.assignedWorkUnits.length + user.assignedTasks.length;
-  const maxCapacity = user.workloadCapacity?.maxConcurrentTasks || 5;
+function calculateDigitalTwinMetrics(data: any) {
+  const currentWorkload = data.assignedWorkUnits.length + data.assignedTasks.length;
+  const maxCapacity = data.workloadCapacity?.maxConcurrentTasks || 5;
   const capacityUtilization = (currentWorkload / maxCapacity) * 100;
   
   // Calculate skill match score
-  const skillMatch = calculateSkillMatch(user);
+  const skillMatch = calculateSkillMatch(data.skills);
   
   // Calculate availability score
-  const availabilityScore = calculateAvailabilityScore(user);
+  const availabilityScore = calculateAvailabilityScore(data.availability);
   
   // Calculate performance trend
-  const performanceTrend = calculatePerformanceTrend(user);
+  const performanceTrend = calculatePerformanceTrend(data.performanceMetrics);
   
   // Calculate overall capacity
   const overallCapacity = Math.max(0, 100 - capacityUtilization);
@@ -714,28 +737,25 @@ function calculateDigitalTwinMetrics(user: any) {
     performanceTrend,
     overallCapacity: Math.round(overallCapacity),
     maxCapacity,
-    stressLevel: user.workloadCapacity?.stressLevel || 'unknown',
-    energyLevel: user.workloadCapacity?.energyLevel || 'unknown',
-    focusLevel: user.workloadCapacity?.focusLevel || 'unknown'
+    stressLevel: data.workloadCapacity?.stressLevel || 'unknown',
+    energyLevel: data.workloadCapacity?.energyLevel || 'unknown',
+    focusLevel: data.workloadCapacity?.focusLevel || 'unknown'
   };
 }
 
-function calculateSkillMatch(user: any): number {
-  // This is a simplified calculation - in a real implementation,
-  // you would compare user skills with current work requirements
-  const userSkills = user.skills || [];
-  const skillLevels = userSkills.map((skill: any) => skill.level);
-  const averageSkillLevel = skillLevels.length > 0 
-    ? skillLevels.reduce((a: number, b: number) => a + b, 0) / skillLevels.length 
-    : 0;
+function calculateSkillMatch(skills: any[]): number {
+  if (!skills || skills.length === 0) return 0;
+  
+  const skillLevels = skills.map((skill: any) => skill.level);
+  const averageSkillLevel = skillLevels.reduce((a: number, b: number) => a + b, 0) / skillLevels.length;
   
   return Math.min(100, (averageSkillLevel / 10) * 100);
 }
 
-function calculateAvailabilityScore(user: any): number {
-  if (!user.availability) return 50;
+function calculateAvailabilityScore(availability: any): number {
+  if (!availability) return 50;
   
-  const status = user.availability.currentStatus;
+  const status = availability.currentStatus;
   const statusScores: { [key: string]: number } = {
     'available': 100,
     'busy': 60,
@@ -746,10 +766,10 @@ function calculateAvailabilityScore(user: any): number {
   return statusScores[status] || 50;
 }
 
-function calculatePerformanceTrend(user: any): string {
-  if (!user.performanceMetrics) return 'stable';
+function calculatePerformanceTrend(performanceMetrics: any): string {
+  if (!performanceMetrics) return 'stable';
   
-  const metrics = user.performanceMetrics;
+  const metrics = performanceMetrics;
   const scores = [
     metrics.taskCompletionRate,
     metrics.qualityScore,
