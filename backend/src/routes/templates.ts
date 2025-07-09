@@ -7,68 +7,45 @@ const router = Router();
 // GET /api/templates - List all templates
 router.get('/', async (req: Request, res: Response) => {
   // TODO: Add filtering, pagination, auth
-  const templates = await prisma.processTemplate.findMany({
-    include: { steps: true }
-  });
+  const templates = await prisma.processTemplate.findMany();
   res.json(templates);
 });
 
 // POST /api/templates - Create a new template
 router.post('/', async (req: Request, res: Response) => {
   // TODO: Validate input, get user from auth
-  const { name, description, createdBy } = req.body;
+  const { name, description, roleType, workUnitType, templateData, companyId } = req.body;
   const template = await prisma.processTemplate.create({
-    data: { name, description, createdBy }
+    data: { name, description, roleType, workUnitType, templateData, companyId }
   });
   res.status(201).json(template);
 });
 
-// GET /api/templates/:id - Get a template with steps
+// Get template by ID
 router.get('/:id', async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  const template = await prisma.processTemplate.findUnique({
-    where: { id },
-    include: { steps: true }
-  });
-  if (!template) return res.status(404).json({ error: 'Template not found' });
-  res.json(template);
-});
-
-// POST /api/templates/:id/steps - Add a step to a template
-router.post('/:id/steps', async (req: Request, res: Response) => {
-  const templateId = Number(req.params.id);
-  const { stepName, sequenceOrder, baselineTimeHours, assignmentType, assignedRoleId, assignedMachineId, dependencyStepId } = req.body;
-  const step = await prisma.templateStep.create({
-    data: {
-      templateId,
-      stepName,
-      sequenceOrder,
-      baselineTimeHours,
-      assignmentType,
-      assignedRoleId,
-      assignedMachineId,
-      dependencyStepId
+  try {
+    const { id } = req.params;
+    if (!id) {
+      res.status(400).json({ error: 'Template ID is required' });
+      return;
     }
-  });
-  res.status(201).json(step);
-});
+    
+    const template = await prisma.processTemplate.findUnique({
+      where: { id }
+    });
 
-// PUT /api/templates/steps/:step_id - Update a step
-router.put('/steps/:step_id', async (req: Request, res: Response) => {
-  const id = Number(req.params.step_id);
-  const data = req.body;
-  const step = await prisma.templateStep.update({
-    where: { id },
-    data
-  });
-  res.json(step);
-});
+    if (!template) {
+      res.status(404).json({ error: 'Template not found' });
+      return;
+    }
 
-// DELETE /api/templates/steps/:step_id - Delete a step
-router.delete('/steps/:step_id', async (req: Request, res: Response) => {
-  const id = Number(req.params.step_id);
-  await prisma.templateStep.delete({ where: { id } });
-  res.status(204).end();
+    res.json(template);
+    return;
+  } catch (error) {
+    console.error('Error fetching template:', error);
+    res.status(500).json({ error: 'Failed to fetch template' });
+    return;
+  }
 });
 
 // POST /api/projects/:proj_id/apply-template/:template_id - Apply template to project

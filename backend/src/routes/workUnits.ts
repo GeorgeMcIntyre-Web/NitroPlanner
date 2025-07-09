@@ -30,7 +30,12 @@ router.get('/', async (req: Request, res: Response) => {
 // Get work unit by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const workUnitId = parseInt(req.params.id);
+    const workUnitId = req.params.id;
+    if (!workUnitId) {
+      res.status(400).json({ error: 'Work unit ID is required' });
+      return;
+    }
+    
     const workUnit = await prisma.workUnit.findUnique({
       where: { id: workUnitId },
       include: {
@@ -40,35 +45,41 @@ router.get('/:id', async (req: Request, res: Response) => {
             name: true
           }
         },
-        checkpoints: true
+        checkpoints: true,
+        assignedTo: { select: { id: true, firstName: true, lastName: true } }
       }
     });
 
     if (!workUnit) {
-      return res.status(404).json({ error: 'Work unit not found' });
+      res.status(404).json({ error: 'Work unit not found' });
+      return;
     }
 
     res.json(workUnit);
+    return;
   } catch (error) {
     console.error('Error fetching work unit:', error);
     res.status(500).json({ error: 'Failed to fetch work unit' });
+    return;
   }
 });
 
 // Create new work unit
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, description, projectId, unitType, estimatedDuration, assignedTo, startDate } = req.body;
+    const { name, description, projectId, workUnitType, roleType, estimatedHours, assignedToId, startDate } = req.body;
 
     const workUnit = await prisma.workUnit.create({
       data: {
-        name,
-        description,
-        projectId: parseInt(projectId),
-        unitType,
-        estimatedDuration: estimatedDuration ? parseFloat(estimatedDuration) : null,
-        assignedTo: assignedTo ? parseInt(assignedTo) : null,
-        startDate: startDate ? new Date(startDate) : null
+        name: name as string,
+        description: description as string,
+        projectId: projectId as string,
+        workUnitType: workUnitType as string,
+        roleType: roleType as string,
+        estimatedHours: estimatedHours ? parseFloat(estimatedHours) : null,
+        assignedToId: assignedToId || null,
+        startDate: startDate ? new Date(startDate) : null,
+        createdById: (req as any).user?.id || 'system' // Add createdById
       },
       include: {
         project: {
@@ -77,35 +88,43 @@ router.post('/', async (req: Request, res: Response) => {
             name: true
           }
         },
-        checkpoints: true
+        checkpoints: true,
+        assignedTo: { select: { id: true, firstName: true, lastName: true } }
       }
     });
 
     res.status(201).json(workUnit);
+    return;
   } catch (error) {
     console.error('Error creating work unit:', error);
     res.status(500).json({ error: 'Failed to create work unit' });
+    return;
   }
 });
 
 // Update work unit
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const workUnitId = parseInt(req.params.id);
-    const { name, description, unitType, estimatedDuration, actualDuration, status, assignedTo, startDate, completedDate } = req.body;
+    const workUnitId = req.params.id;
+    if (!workUnitId) {
+      res.status(400).json({ error: 'Work unit ID is required' });
+      return;
+    }
+    
+    const { name, description, workUnitType, estimatedHours, actualHours, status, assignedToId, startDate, endDate } = req.body;
 
     const workUnit = await prisma.workUnit.update({
       where: { id: workUnitId },
       data: {
-        name,
-        description,
-        unitType,
-        estimatedDuration: estimatedDuration ? parseFloat(estimatedDuration) : null,
-        actualDuration: actualDuration ? parseFloat(actualDuration) : null,
-        status,
-        assignedTo: assignedTo ? parseInt(assignedTo) : null,
+        name: name as string,
+        description: description as string,
+        workUnitType: workUnitType as string,
+        estimatedHours: estimatedHours ? parseFloat(estimatedHours) : null,
+        actualHours: actualHours ? parseFloat(actualHours) : null,
+        status: status as string,
+        assignedToId: assignedToId || null,
         startDate: startDate ? new Date(startDate) : null,
-        completedDate: completedDate ? new Date(completedDate) : null
+        endDate: endDate ? new Date(endDate) : null
       },
       include: {
         project: {
@@ -114,29 +133,39 @@ router.put('/:id', async (req: Request, res: Response) => {
             name: true
           }
         },
-        checkpoints: true
+        checkpoints: true,
+        assignedTo: { select: { id: true, firstName: true, lastName: true } }
       }
     });
 
     res.json(workUnit);
+    return;
   } catch (error) {
     console.error('Error updating work unit:', error);
     res.status(500).json({ error: 'Failed to update work unit' });
+    return;
   }
 });
 
 // Delete work unit
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const workUnitId = parseInt(req.params.id);
+    const workUnitId = req.params.id;
+    if (!workUnitId) {
+      res.status(400).json({ error: 'Work unit ID is required' });
+      return;
+    }
+    
     await prisma.workUnit.delete({
       where: { id: workUnitId }
     });
 
     res.json({ message: 'Work unit deleted successfully' });
+    return;
   } catch (error) {
     console.error('Error deleting work unit:', error);
     res.status(500).json({ error: 'Failed to delete work unit' });
+    return;
   }
 });
 
@@ -148,15 +177,17 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.get('/:workUnitId/smart-assignment', authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { workUnitId } = req.params;
+    if (!workUnitId) {
+      res.status(400).json({ error: 'workUnitId is required' });
+      return;
+    }
     const companyId = (req as any).user.companyId;
 
     // Get the work unit details
     const workUnit = await prisma.workUnit.findUnique({
       where: { id: workUnitId },
       include: {
-        project: {
-          select: { name: true }
-        }
+        project: { select: { name: true } }
       }
     });
 
@@ -177,7 +208,7 @@ router.get('/:workUnitId/smart-assignment', authenticateToken, async (req: Reque
     });
 
     // For now, return basic recommendations without complex scoring
-    const recommendations = availableUsers.slice(0, 5).map(user => ({
+    const recommendations = availableUsers.slice(0, 5).map((user: any) => ({
       user: {
         id: user.id,
         firstName: user.firstName,
@@ -220,6 +251,10 @@ router.get('/:workUnitId/smart-assignment', authenticateToken, async (req: Reque
 router.post('/:workUnitId/smart-assign', authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { workUnitId } = req.params;
+    if (!workUnitId) {
+      res.status(400).json({ error: 'workUnitId is required' });
+      return;
+    }
     const { userId, reason } = req.body;
 
     // Validate the assignment
@@ -353,8 +388,8 @@ function calculateSkillMatchScore(workUnit: any, user: any): number {
   let matchScore = 0;
   let totalWeight = 0;
 
-  requiredSkills.forEach(requiredSkill => {
-    const matchingSkills = userSkillNames.filter(userSkill => 
+  requiredSkills.forEach((requiredSkill: string) => {
+    const matchingSkills = userSkillNames.filter((userSkill: string) => 
       userSkill.includes(requiredSkill) || requiredSkill.includes(userSkill)
     );
     
@@ -398,11 +433,11 @@ function calculatePerformanceScore(user: any): number {
     metrics.qualityScore || 0,
     metrics.efficiencyScore || 0,
     metrics.collaborationScore || 0
-  ].filter(score => score > 0);
+  ].filter((score: number) => score > 0);
 
   if (scores.length === 0) return 70;
 
-  const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const averageScore = scores.reduce((a: number, b: number) => a + b, 0) / scores.length;
   return Math.min(100, averageScore * 10); // Convert 0-10 scale to 0-100
 }
 

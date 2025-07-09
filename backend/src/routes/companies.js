@@ -47,7 +47,7 @@ router.get('/profile', async (req, res, next) => {
 // Update company profile
 router.put('/profile', [
   body('name').optional().isLength({ min: 1, max: 200 }),
-  body('industry').optional().isIn(['automotive', 'aerospace', 'manufacturing', 'other']),
+  body('industry').optional().isIn(['technology', 'manufacturing', 'aerospace', 'automotive', 'healthcare', 'energy', 'construction', 'other']),
   body('companySize').optional().isIn(['small', 'medium', 'large']),
   body('settings').optional().isObject()
 ], authorizeCompanyAdmin, async (req, res, next) => {

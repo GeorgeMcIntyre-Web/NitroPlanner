@@ -503,8 +503,8 @@ router.get('/supported/list', authenticateToken, async (req, res, next) => {
         name: 'Fides',
         versions: ['2023', '2022', '2021'],
         fileExtensions: ['.fides', '.fdm'],
-        description: 'Fides - Specialized automotive design software',
-        features: ['Automotive Design', 'Assembly Planning', 'Manufacturing']
+        description: 'Fides - Specialized design software',
+        features: ['Design', 'Assembly Planning', 'Manufacturing']
       },
       {
         name: 'SolidWorks',

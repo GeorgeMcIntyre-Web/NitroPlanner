@@ -1,87 +1,142 @@
-# NitroPlanner Development Script for Windows
-Write-Host "Starting NitroPlanner Development Environment" -ForegroundColor Green
-Write-Host "=============================================" -ForegroundColor Green
+# NitroPlanner Professional Development Script for Windows
+param(
+    [switch]$Docker,
+    [switch]$Local,
+    [switch]$Setup
+)
 
-# Check if Python is installed
-try {
-    python --version | Out-Null
-    Write-Host "Python is installed" -ForegroundColor Green
-} catch {
-    Write-Host "Python is not installed. Please install Python 3.9+" -ForegroundColor Red
-    exit 1
+Write-Host "NitroPlanner Development Environment" -ForegroundColor Green
+Write-Host "====================================" -ForegroundColor Green
+
+# Function to check if command exists
+function Test-Command($cmdname) {
+    return [bool](Get-Command -Name $cmdname -ErrorAction SilentlyContinue)
 }
 
-# Check if Node.js is installed
-try {
-    node --version | Out-Null
-    Write-Host "Node.js is installed" -ForegroundColor Green
-} catch {
-    Write-Host "Node.js is not installed. Please install Node.js 18+" -ForegroundColor Red
-    exit 1
+# Function to check Node.js version
+function Test-NodeVersion {
+    try {
+        $nodeVersion = node --version
+        $majorVersion = [int]($nodeVersion -replace 'v', '' -split '\.')[0]
+        if ($majorVersion -lt 18) {
+            Write-Host "Node.js version 18+ is required. Current version: $nodeVersion" -ForegroundColor Red
+            return $false
+        }
+        Write-Host "Node.js version: $nodeVersion" -ForegroundColor Green
+        return $true
+    }
+    catch {
+        Write-Host "Node.js is not installed. Please install Node.js 18+" -ForegroundColor Red
+        return $false
+    }
 }
 
-# Check if npm is installed
-try {
-    npm --version | Out-Null
-    Write-Host "npm is installed" -ForegroundColor Green
-} catch {
-    Write-Host "npm is not installed" -ForegroundColor Red
-    exit 1
+# Function to check Docker
+function Test-Docker {
+    if (Test-Command "docker") {
+        Write-Host "Docker is available" -ForegroundColor Green
+        return $true
+    } else {
+        Write-Host "Docker is not available" -ForegroundColor Yellow
+        return $false
+    }
 }
 
-Write-Host "`nSetting up backend..." -ForegroundColor Yellow
-
-# Navigate to backend directory
-Set-Location backend
-
-# Check if virtual environment exists
-if (-not (Test-Path "venv")) {
-    Write-Host "Creating virtual environment..." -ForegroundColor Yellow
-    python -m venv venv
+# Function to setup project
+function Setup-Project {
+    Write-Host "`nSetting up NitroPlanner project..." -ForegroundColor Yellow
+    
+    # Install root dependencies
+    Write-Host "Installing root dependencies..." -ForegroundColor Yellow
+    npm install
+    
+    # Install backend dependencies
+    Write-Host "Installing backend dependencies..." -ForegroundColor Yellow
+    Set-Location backend
+    npm install
+    Set-Location ..
+    
+    # Install frontend dependencies
+    Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
+    Set-Location frontend
+    npm install
+    Set-Location ..
+    
+    # Setup database
+    Write-Host "Setting up database..." -ForegroundColor Yellow
+    npm run db:setup
+    
+    Write-Host "`nProject setup complete!" -ForegroundColor Green
 }
 
-# Activate virtual environment
-Write-Host "Activating virtual environment..." -ForegroundColor Yellow
-& ".\venv\Scripts\Activate.ps1"
+# Function to start Docker environment
+function Start-DockerEnvironment {
+    Write-Host "`nStarting Docker environment..." -ForegroundColor Yellow
+    
+    if (-not (Test-Docker)) {
+        Write-Host "Docker is required for this option. Please install Docker Desktop." -ForegroundColor Red
+        exit 1
+    }
+    
+    # Build and start containers
+    Write-Host "Building and starting containers..." -ForegroundColor Yellow
+    docker-compose up -d --build
+    
+    Write-Host "`nDocker environment started!" -ForegroundColor Green
+    Write-Host "Backend: http://localhost:5000" -ForegroundColor Cyan
+    Write-Host "Frontend: http://localhost:3000" -ForegroundColor Cyan
+    Write-Host "Database: localhost:5432" -ForegroundColor Cyan
+    Write-Host "Redis: localhost:6379" -ForegroundColor Cyan
+    
+    Write-Host "`nTo view logs: docker-compose logs -f" -ForegroundColor Yellow
+    Write-Host "To stop: docker-compose down" -ForegroundColor Yellow
+}
 
-# Install backend dependencies
-Write-Host "Installing backend dependencies..." -ForegroundColor Yellow
-pip install -r requirements.txt
+# Function to start local environment
+function Start-LocalEnvironment {
+    Write-Host "`nStarting local development environment..." -ForegroundColor Yellow
+    
+    if (-not (Test-NodeVersion)) {
+        exit 1
+    }
+    
+    # Check if dependencies are installed
+    if (-not (Test-Path "node_modules")) {
+        Write-Host "Dependencies not found. Running setup..." -ForegroundColor Yellow
+        Setup-Project
+    }
+    
+    # Start both backend and frontend concurrently
+    Write-Host "Starting backend and frontend..." -ForegroundColor Yellow
+    npm run dev
+    
+    Write-Host "`nLocal development environment started!" -ForegroundColor Green
+    Write-Host "Backend: http://localhost:5000" -ForegroundColor Cyan
+    Write-Host "Frontend: http://localhost:3000" -ForegroundColor Cyan
+}
 
-# Start backend server
-Write-Host "Starting backend server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\venv\Scripts\Activate.ps1; python app.py"
+# Main execution
+if ($Setup) {
+    Setup-Project
+    exit 0
+}
 
-# Navigate back to root
-Set-Location ..
+if ($Docker) {
+    Start-DockerEnvironment
+    exit 0
+}
 
-Write-Host "`nSetting up frontend..." -ForegroundColor Yellow
+if ($Local) {
+    Start-LocalEnvironment
+    exit 0
+}
 
-# Navigate to frontend directory
-Set-Location frontend
-
-# Install frontend dependencies
-Write-Host "Installing frontend dependencies..." -ForegroundColor Yellow
-npm install
-
-# Start frontend server
-Write-Host "Starting frontend server..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "npm run dev"
-
-# Navigate back to root
-Set-Location ..
-
-Write-Host "`nDevelopment servers started!" -ForegroundColor Green
-Write-Host "Backend: http://localhost:5000" -ForegroundColor Cyan
-Write-Host "Frontend: http://localhost:3000" -ForegroundColor Cyan
-Write-Host "`nPress any key to stop all servers..." -ForegroundColor Yellow
-
-# Wait for user input to stop
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-
-Write-Host "`nStopping development servers..." -ForegroundColor Yellow
-
-# Stop all Python and Node processes
-Get-Process | Where-Object {$_.ProcessName -eq "python" -or $_.ProcessName -eq "node"} | Stop-Process -Force
-
-Write-Host "Development servers stopped" -ForegroundColor Green 
+# Default behavior - show options
+Write-Host "`nAvailable options:" -ForegroundColor Yellow
+Write-Host "  -Setup    : Install dependencies and setup database" -ForegroundColor White
+Write-Host "  -Local    : Start local development environment" -ForegroundColor White
+Write-Host "  -Docker   : Start Docker environment" -ForegroundColor White
+Write-Host "`nExamples:" -ForegroundColor Yellow
+Write-Host "  .\scripts\dev.ps1 -Setup" -ForegroundColor White
+Write-Host "  .\scripts\dev.ps1 -Local" -ForegroundColor White
+Write-Host "  .\scripts\dev.ps1 -Docker" -ForegroundColor White 

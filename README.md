@@ -1,349 +1,170 @@
 # NitroPlanner
 
-The world's first AI-powered automotive project management system for line builder companies.
+AI-powered project management system with digital twin capabilities.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- Python 3.9+
-- PostgreSQL (managed by Railway) or SQLite (local development)
 
-### Windows Development Setup
-```powershell
-# Run the development script
-.\scripts\dev.ps1
+- **Node.js 18+** and npm
+- **Docker** (optional, for containerized development)
+- **PostgreSQL** (if running locally without Docker)
 
-# Run tests
-.\scripts\test.ps1
-```
+### Development Setup
 
-### Manual Setup
+#### Option 1: Local Development (Recommended for development)
+
 ```bash
-# Backend
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1  # Windows
-source venv/bin/activate     # Linux/Mac
-pip install -r requirements.txt
-python seed_auth_data.py     # Create demo users
-python app.py
+# Clone the repository
+git clone https://github.com/yourusername/NitroPlanner.git
+cd NitroPlanner
 
-# Frontend  
-cd frontend
-npm install
+# Install all dependencies and setup database
+npm run setup
+
+# Start development servers
 npm run dev
 ```
 
-### Railway Deployment
-1. Connect GitHub repo to Railway
-2. Add PostgreSQL service
-3. Deploy backend service (points to `/backend`)
-4. Deploy frontend service (points to `/frontend`)
-5. Configure environment variables
+#### Option 2: Docker Development (Recommended for consistency)
 
-## 🔐 Authentication System
-
-NitroPlanner now includes a comprehensive authentication system with role-based access control.
-
-### Demo Users
-After running `python seed_auth_data.py`, you can use these demo accounts:
-
-| Username | Password | Role | Email |
-|----------|----------|------|-------|
-| demo | demo123 | Project Manager | demo@nitroplanner.com |
-| admin | admin123 | Admin | admin@nitroplanner.com |
-| mechanical | mechanical123 | Mechanical Designer | mechanical@nitroplanner.com |
-| electrical | electrical123 | Electrical Designer | electrical@nitroplanner.com |
-| simulation | simulation123 | Simulation Engineer | simulation@nitroplanner.com |
-| manufacturing | manufacturing123 | Manufacturing Engineer | manufacturing@nitroplanner.com |
-| quality | quality123 | Quality Engineer | quality@nitroplanner.com |
-| technician | technician123 | Technician | technician@nitroplanner.com |
-
-### Features
-- **JWT-based authentication** with access and refresh tokens
-- **Role-based access control** with 9 different user roles
-- **Password strength validation** with security requirements
-- **Email format validation** and duplicate prevention
-- **Profile management** with update capabilities
-- **Password change functionality** with current password verification
-- **Admin user management** for user administration
-- **Automatic token refresh** for seamless user experience
-
-### API Endpoints
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Token refresh
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
-- `POST /api/auth/change-password` - Change password
-- `GET /api/auth/users` - Get all users (admin only)
-- `PUT /api/auth/users/:id` - Update user (admin only)
-
-## 🧪 Testing Framework
-
-NitroPlanner includes comprehensive testing for both backend and frontend.
-
-### Backend Testing
 ```bash
-cd backend
-python -m pytest tests/ -v --cov=. --cov-report=html
+# Clone the repository
+git clone https://github.com/yourusername/NitroPlanner.git
+cd NitroPlanner
+
+# Start with Docker
+npm run docker:up
 ```
 
-**Test Coverage:**
-- ✅ API endpoint testing
-- ✅ Authentication system testing
-- ✅ Database model testing
-- ✅ Error handling testing
-- ✅ Integration testing
+#### Option 3: Windows PowerShell Script
 
-### Frontend Testing
-```bash
-cd frontend
-npm test -- --coverage
-```
-
-**Test Coverage:**
-- ✅ Component testing with React Testing Library
-- ✅ Authentication context testing
-- ✅ API integration testing
-- ✅ User interaction testing
-- ✅ Error handling testing
-
-### Running All Tests
 ```powershell
-# Windows
-.\scripts\test.ps1
+# Setup project
+.\scripts\dev.ps1 -Setup
 
-# Linux/Mac
-./scripts/test.sh
+# Start local development
+.\scripts\dev.ps1 -Local
+
+# Start Docker environment
+.\scripts\dev.ps1 -Docker
 ```
 
 ## 📁 Project Structure
+
 ```
-nitro-planner/
-├── backend/          # Flask API with AI integration
-│   ├── app.py        # Main Flask application
-│   ├── auth.py       # Authentication routes
-│   ├── models.py     # Database models
-│   ├── seed_auth_data.py # Demo user creation
-│   ├── tests/        # Backend tests
-│   │   ├── conftest.py
-│   │   └── test_api.py
-│   └── requirements.txt
-├── frontend/         # Next.js UI
-│   ├── pages/        # Next.js pages
-│   │   ├── login.tsx # Login page
-│   │   ├── register.tsx # Registration page
-│   │   └── index.tsx # Dashboard (protected)
-│   ├── components/   # React components
-│   │   └── ProtectedRoute.tsx # Route protection
-│   ├── contexts/     # React contexts
-│   │   └── AuthContext.tsx # Authentication context
-│   ├── utils/        # Utility functions
-│   │   └── api.ts    # API client
-│   ├── __tests__/    # Frontend tests
+NitroPlanner/
+├── backend/                 # Node.js/TypeScript API
+│   ├── src/
+│   ├── prisma/             # Database schema and migrations
 │   └── package.json
-├── scripts/          # Development scripts
-│   ├── dev.ps1       # Development setup
-│   └── test.ps1      # Test runner
-├── docs/            # Documentation
-└── README.md
+├── frontend/               # Next.js React application
+│   ├── components/
+│   ├── pages/
+│   └── package.json
+├── scripts/                # Development scripts
+├── docker-compose.yml      # Docker orchestration
+└── package.json           # Root workspace configuration
 ```
 
-## 🔧 Environment Variables
+## 🛠️ Available Scripts
 
-### Backend (.env)
+### Root Level Commands
+
 ```bash
-DATABASE_URL=sqlite:///nitro_planner.db  # or PostgreSQL URL
-REDIS_URL=redis://localhost:6379
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret-key
-CORS_ORIGIN=http://localhost:3000
-ABACUS_AI_API_KEY=your-abacus-ai-key
-FLASK_ENV=development
-PORT=5000
+# Development
+npm run dev                 # Start both backend and frontend
+npm run dev:backend         # Start only backend
+npm run dev:frontend        # Start only frontend
+
+# Building
+npm run build              # Build both applications
+npm run build:backend      # Build backend only
+npm run build:frontend     # Build frontend only
+
+# Database
+npm run db:setup           # Run migrations and seed data
+npm run db:reset           # Reset database and seed
+
+# Testing
+npm run test               # Run all tests
+npm run test:backend       # Run backend tests
+npm run test:frontend      # Run frontend tests
+
+# Linting
+npm run lint               # Lint all code
+npm run lint:backend       # Lint backend code
+npm run lint:frontend      # Lint frontend code
+
+# Docker
+npm run docker:up          # Start Docker environment
+npm run docker:down        # Stop Docker environment
+npm run docker:build       # Build Docker images
+npm run docker:logs        # View Docker logs
 ```
 
-### Frontend (.env.local)
+### Backend Commands
+
 ```bash
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NODE_ENV=development
-```
-
-## 🏗️ Architecture
-- **Frontend**: Next.js 14 with TypeScript and Tailwind CSS
-- **Backend**: Flask with SQLAlchemy and AI integration
-- **Database**: PostgreSQL (production) / SQLite (development)
-- **Authentication**: JWT with Flask-JWT-Extended
-- **AI/ML**: Abacus.ai integration with custom algorithms
-- **Real-time**: WebSocket support with Socket.IO
-- **Testing**: Pytest (backend) + Jest + React Testing Library (frontend)
-- **Deployment**: Railway (dev) → AWS/Azure (prod)
-
-## 📊 Core Features
-
-### 🔐 Authentication & Authorization
-- **JWT-based authentication** with secure token management
-- **Role-based access control** with 9 specialized roles
-- **Password security** with strength validation
-- **Profile management** with user preferences
-- **Admin panel** for user administration
-
-### 🎯 Role-Based Dashboards (9 Specialized Roles)
-- **Admin**: System administration and user management
-- **Project Manager**: Project oversight and team coordination
-- **Mechanical Designer**: CAD design and mechanical engineering
-- **Electrical Designer**: Electrical systems and controls
-- **Simulation Engineer**: Analysis and simulation work
-- **Manufacturing Engineer**: Production and manufacturing
-- **Quality Engineer**: Quality assurance and testing
-- **Technician**: Technical support and maintenance
-- **Operator**: Equipment operation and monitoring
-
-### 🤖 AI-Powered Features
-- **Delay Prediction**: Machine learning algorithms for task completion time
-- **Risk Assessment**: AI-driven risk scoring and mitigation suggestions
-- **Resource Optimization**: Intelligent resource allocation recommendations
-- **Process Simulation**: Monte Carlo simulations with 10,000+ iterations
-- **Historical Learning**: Continuous improvement from completion data
-
-### 📋 Advanced Project Management
-- **Kanban Board**: Drag-and-drop task management with real-time updates
-- **Gantt Charts**: Interactive timeline visualization with dependencies
-- **Work Units**: Process simulation with checkpoints and quality gates
-- **Monte Carlo Simulation**: Project completion prediction with confidence intervals
-- **Time Tracking**: Detailed time analysis and efficiency scoring
-
-### 🔄 Real-Time Collaboration
-- **WebSocket Integration**: Live updates across all users
-- **Multi-user Support**: Concurrent editing and collaboration
-- **Activity Tracking**: Real-time progress monitoring
-- **Notifications**: Instant updates on task changes
-
-### 📈 Analytics & Reporting
-- **Efficiency Analytics**: Performance metrics and optimization insights
-- **Progress Tracking**: Visual progress indicators and milestone tracking
-- **Resource Utilization**: Team and equipment usage analytics
-- **Predictive Analytics**: AI-powered forecasting and planning
-
-## 🛠️ Development
-
-### Running Tests
-```bash
-# Backend tests
 cd backend
-python -m pytest
 
-# Frontend tests
-cd frontend
-npm test
+# Development
+npm run dev                # Start with nodemon
+npm run build              # Build TypeScript
+npm run start              # Start production server
 
-# All tests
-.\scripts\test.ps1
+# Database
+npm run db:migrate         # Run migrations
+npm run db:deploy          # Deploy migrations
+npm run db:studio          # Open Prisma Studio
+npm run db:seed            # Seed database
+
+# Testing
+npm run test               # Run tests
+npm run test:watch         # Run tests in watch mode
+npm run test:coverage      # Run tests with coverage
+
+# Code Quality
+npm run lint               # Lint code
+npm run lint:fix           # Fix linting issues
+npm run type-check         # TypeScript type checking
 ```
 
-### Code Quality
+### Frontend Commands
+
 ```bash
-# Backend linting
-cd backend
-black .
-flake8 .
-bandit -r .
-
-# Frontend linting
 cd frontend
-npm run lint
+
+# Development
+npm run dev                # Start Next.js development server
+npm run build              # Build for production
+npm run start              # Start production server
+
+# Testing
+npm run test               # Run tests
+npm run test:watch         # Run tests in watch mode
+npm run test:coverage      # Run tests with coverage
+
+# Linting
+npm run lint               # Lint code
 ```
 
-### Docker Development
+## 🌐 Access Points
+
+After starting the development environment:
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+- **Database**: localhost:5432
+- **Redis**: localhost:6379
+- **Prisma Studio**: http://localhost:5555 (run `npm run db:studio` in backend)
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Copy `env.example` to `.env` and configure your environment:
+
 ```bash
-# Start all services
-docker-compose up
-
-# Start with monitoring
-docker-compose --profile monitoring up
-
-# Production setup
-docker-compose --profile production up
+cp env.example .env
 ```
-
-## 🚀 Deployment
-
-### Railway (Recommended for Development)
-1. Follow the [Railway Deployment Guide](RAILWAY_DEPLOYMENT.md)
-2. Set up PostgreSQL database
-3. Configure environment variables
-4. Deploy backend and frontend services
-
-### Production Deployment
-- **Backend**: AWS ECS, Azure Container Instances, or Kubernetes
-- **Frontend**: Vercel, Netlify, or CDN
-- **Database**: AWS RDS, Azure Database, or managed PostgreSQL
-- **Monitoring**: Prometheus + Grafana (included in Docker setup)
-
-## 🔐 Security Features
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt password encryption
-- **CORS Protection**: Configured for secure cross-origin requests
-- **Input Validation**: Comprehensive data validation and sanitization
-- **SQL Injection Protection**: SQLAlchemy ORM with parameterized queries
-- **XSS Prevention**: React with built-in XSS protection
-- **Environment Variable Management**: Secure configuration handling
-- **Role-based Access Control**: Granular permissions system
-
-## 📚 API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Token refresh
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
-- `POST /api/auth/change-password` - Change password
-
-### Core Endpoints
-- `GET /api/health` - Health check
-- `GET /api/projects` - List projects
-- `GET /api/tasks` - List tasks
-- `GET /api/kanban/{project_id}` - Kanban board data
-- `GET /api/gantt/{project_id}` - Gantt chart data
-- `POST /api/ai/predict` - AI delay prediction
-- `POST /api/simulation/{project_id}` - Monte Carlo simulation
-
-### WebSocket Events
-- `connect` - Client connection
-- `join_project` - Join project room
-- `kanban_update` - Real-time kanban updates
-- `task_update` - Real-time task updates
-
-## 🤝 Contributing
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-- **Documentation**: Check the [docs/](docs/) directory
-- **Issues**: Create an issue on GitHub
-- **Discussions**: Use GitHub Discussions for questions
-
-## 🎯 Roadmap
-- [x] **User Authentication System** - JWT-based auth with role-based access
-- [x] **Comprehensive Testing** - Backend and frontend test coverage
-- [ ] Advanced CAD file integration
-- [ ] Mobile app development
-- [ ] Advanced AI model training
-- [ ] Multi-language support
-- [ ] Advanced reporting dashboard
-- [ ] Integration with ERP systems
-- [ ] Advanced workflow automation
-- [ ] Machine learning model deployment
-
----
-
-**Built with ❤️ for the automotive industry** 

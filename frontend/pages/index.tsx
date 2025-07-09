@@ -340,7 +340,7 @@ export default function Dashboard() {
             <div className="flex justify-between items-center py-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">NitroPlanner</h1>
-                <p className="text-gray-600">AI-Powered Automotive Project Management</p>
+                <p className="text-gray-600">AI-Powered Project Management</p>
               </div>
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-500">Welcome back,</span>

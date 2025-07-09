@@ -10,6 +10,10 @@ const prisma = new PrismaClient();
 interface AuthenticatedRequest extends Request {
   user: {
     id: string;
+    email: string;
+    username: string;
+    role: string;
+    department: string;
     companyId: string;
   };
 }

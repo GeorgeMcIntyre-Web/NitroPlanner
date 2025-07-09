@@ -1,13 +1,12 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { body } from 'express-validator';
 import { validationResult } from 'express-validator';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
-import { Prisma } from '@prisma/client';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -292,7 +291,7 @@ router.post('/2fa/disable', async (req: Request, res: Response): Promise<void> =
       data: { 
         twoFactorEnabled: false,
         twoFactorSecret: null,
-        backupCodes: Prisma.JsonNull
+        backupCodes: { set: null }
       }
     });
 
@@ -393,12 +392,16 @@ router.post('/azure/login', async (req: Request, res: Response) => {
     }
     const azureUser = userData as AzureUserData;
     // Find or create user
+    const orFilters = [];
+    if (azureUser.mail || azureUser.userPrincipalName) {
+      orFilters.push({ email: (azureUser.mail || azureUser.userPrincipalName) as string });
+    }
+    if (azureUser.userPrincipalName) {
+      orFilters.push({ username: azureUser.userPrincipalName });
+    }
     let user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: azureUser.mail || azureUser.userPrincipalName },
-          { username: azureUser.userPrincipalName }
-        ]
+        OR: orFilters
       }
     });
 

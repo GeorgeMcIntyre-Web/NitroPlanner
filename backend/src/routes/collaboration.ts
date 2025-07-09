@@ -8,10 +8,12 @@ const prisma = new PrismaClient();
 // Extend Request interface to include user
 interface AuthenticatedRequest extends Request {
   user?: {
-    id: number;
+    id: string;
     username: string;
     email: string;
     role: string;
+    department: string;
+    companyId: string;
   };
 }
 
@@ -38,8 +40,8 @@ router.get('/comments/:type/:id', authenticateToken, async (req: AuthenticatedRe
     const skip = (Number(page) - 1) * Number(limit);
     
     const where = type === 'task' 
-      ? { taskId: Number(id) }
-      : { projectId: Number(id) };
+      ? { taskId: id || null }
+      : { projectId: id || null };
     
     const comments = await prisma.comment.findMany({
       where,
@@ -94,16 +96,17 @@ router.post('/comments', authenticateToken, async (req: AuthenticatedRequest, re
     const userId = req.user?.id;
     
     if (!content || (!taskId && !projectId)) {
-      return res.status(400).json({ error: 'Content and taskId or projectId are required' });
+      res.status(400).json({ error: 'Content and taskId or projectId are required' });
+      return;
     }
     
     const comment = await prisma.comment.create({
       data: {
         content,
-        taskId: taskId ? Number(taskId) : null,
-        projectId: projectId ? Number(projectId) : null,
-        userId,
-        parentId: parentId ? Number(parentId) : null
+        taskId: taskId || null,
+        projectId: projectId || null,
+        userId: userId!,
+        parentId: parentId || null
       },
       include: {
         user: {
@@ -122,9 +125,11 @@ router.post('/comments', authenticateToken, async (req: AuthenticatedRequest, re
     io.to(room).emit('comment_added', comment);
     
     res.json(comment);
+    return;
   } catch (error) {
     console.error('Error creating comment:', error);
     res.status(500).json({ error: 'Failed to create comment' });
+    return;
   }
 });
 
@@ -135,21 +140,28 @@ router.put('/comments/:id', authenticateToken, async (req: AuthenticatedRequest,
     const { content } = req.body;
     const userId = req.user?.id;
     
+    if (!id) {
+      res.status(400).json({ error: 'Comment ID is required' });
+      return;
+    }
+    
     const comment = await prisma.comment.findUnique({
-      where: { id: Number(id) },
+      where: { id },
       include: { task: true, project: true }
     });
     
     if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
+      res.status(404).json({ error: 'Comment not found' });
+      return;
     }
     
     if (comment.userId !== userId) {
-      return res.status(403).json({ error: 'Not authorized to edit this comment' });
+      res.status(403).json({ error: 'Not authorized to edit this comment' });
+      return;
     }
     
     const updatedComment = await prisma.comment.update({
-      where: { id: Number(id) },
+      where: { id },
       data: { content },
       include: {
         user: {
@@ -168,9 +180,11 @@ router.put('/comments/:id', authenticateToken, async (req: AuthenticatedRequest,
     io.to(room).emit('comment_updated', updatedComment);
     
     res.json(updatedComment);
+    return;
   } catch (error) {
     console.error('Error updating comment:', error);
     res.status(500).json({ error: 'Failed to update comment' });
+    return;
   }
 });
 
@@ -180,31 +194,40 @@ router.delete('/comments/:id', authenticateToken, async (req: AuthenticatedReque
     const { id } = req.params;
     const userId = req.user?.id;
     
+    if (!id) {
+      res.status(400).json({ error: 'Comment ID is required' });
+      return;
+    }
+    
     const comment = await prisma.comment.findUnique({
-      where: { id: Number(id) },
+      where: { id },
       include: { task: true, project: true }
     });
     
     if (!comment) {
-      return res.status(404).json({ error: 'Comment not found' });
+      res.status(404).json({ error: 'Comment not found' });
+      return;
     }
     
     if (comment.userId !== userId) {
-      return res.status(403).json({ error: 'Not authorized to delete this comment' });
+      res.status(403).json({ error: 'Not authorized to delete this comment' });
+      return;
     }
     
     await prisma.comment.delete({
-      where: { id: Number(id) }
+      where: { id }
     });
     
     // Emit real-time update
     const room = comment.taskId ? `task_${comment.taskId}` : `project_${comment.projectId}`;
-    io.to(room).emit('comment_deleted', { id: Number(id) });
+    io.to(room).emit('comment_deleted', { id });
     
     res.json({ message: 'Comment deleted successfully' });
+    return;
   } catch (error) {
     console.error('Error deleting comment:', error);
     res.status(500).json({ error: 'Failed to delete comment' });
+    return;
   }
 });
 
@@ -217,8 +240,8 @@ router.post('/sessions/start', authenticateToken, async (req: AuthenticatedReque
     // End any existing active session for this user
     await prisma.collaborationSession.updateMany({
       where: {
-        userId,
-        projectId: Number(projectId),
+        userId: userId!,
+        projectId,
         isActive: true
       },
       data: {
@@ -230,8 +253,8 @@ router.post('/sessions/start', authenticateToken, async (req: AuthenticatedReque
     // Create new session
     const session = await prisma.collaborationSession.create({
       data: {
-        projectId: Number(projectId),
-        userId
+        projectId,
+        userId: userId!
       },
       include: {
         user: {
@@ -263,8 +286,8 @@ router.post('/sessions/end', authenticateToken, async (req: AuthenticatedRequest
     
     const session = await prisma.collaborationSession.updateMany({
       where: {
-        userId,
-        projectId: Number(projectId),
+        userId: userId!,
+        projectId,
         isActive: true
       },
       data: {
@@ -288,9 +311,14 @@ router.get('/sessions/active/:projectId', authenticateToken, async (req: Authent
   try {
     const { projectId } = req.params;
     
+    if (!projectId) {
+      res.status(400).json({ error: 'Project ID is required' });
+      return;
+    }
+    
     const sessions = await prisma.collaborationSession.findMany({
       where: {
-        projectId: Number(projectId),
+        projectId,
         isActive: true
       },
       include: {
@@ -307,9 +335,11 @@ router.get('/sessions/active/:projectId', authenticateToken, async (req: Authent
     });
     
     res.json(sessions);
+    return;
   } catch (error) {
     console.error('Error fetching active sessions:', error);
     res.status(500).json({ error: 'Failed to fetch active sessions' });
+    return;
   }
 });
 
@@ -321,8 +351,8 @@ router.post('/live-edit', authenticateToken, async (req: AuthenticatedRequest, r
     
     const liveEdit = await prisma.liveEdit.create({
       data: {
-        taskId: Number(taskId),
-        userId,
+        taskId,
+        userId: userId!,
         field,
         oldValue,
         newValue
@@ -355,8 +385,13 @@ router.get('/live-edit/:taskId', authenticateToken, async (req: AuthenticatedReq
     const { taskId } = req.params;
     const { limit = 50 } = req.query;
     
+    if (!taskId) {
+      res.status(400).json({ error: 'Task ID is required' });
+      return;
+    }
+    
     const liveEdits = await prisma.liveEdit.findMany({
-      where: { taskId: Number(taskId) },
+      where: { taskId },
       include: {
         user: {
           select: {
@@ -372,9 +407,11 @@ router.get('/live-edit/:taskId', authenticateToken, async (req: AuthenticatedReq
     });
     
     res.json(liveEdits);
+    return;
   } catch (error) {
     console.error('Error fetching live edit history:', error);
     res.status(500).json({ error: 'Failed to fetch live edit history' });
+    return;
   }
 });
 

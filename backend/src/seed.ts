@@ -19,12 +19,12 @@ async function main() {
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@nitroplanner.com' },
     update: {
-      password: hashedPassword,
+      passwordHash: hashedPassword,
     },
     create: {
       username: 'demo',
       email: 'demo@nitroplanner.com',
-      password: hashedPassword, // Now using a hashed password
+      passwordHash: hashedPassword, // Now using a hashed password
       role: 'PROJECT_MANAGER',
       firstName: 'Demo',
       lastName: 'User',

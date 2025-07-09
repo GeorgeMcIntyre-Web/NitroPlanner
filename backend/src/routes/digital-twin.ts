@@ -208,6 +208,11 @@ router.put('/me/skills/:skillId', authenticateToken, async (req: Request, res: R
     const { skillId } = req.params;
     const updateData = req.body;
 
+    if (!skillId) {
+      res.status(400).json({ error: 'Skill ID is required' });
+      return;
+    }
+
     const skill = await prisma.skill.updateMany({
       where: {
         id: skillId,
@@ -230,6 +235,11 @@ router.delete('/me/skills/:skillId', authenticateToken, async (req: Request, res
   try {
     const userId = (req as any).user.id;
     const { skillId } = req.params;
+
+    if (!skillId) {
+      res.status(400).json({ error: 'Skill ID is required' });
+      return;
+    }
 
     await prisma.skill.deleteMany({
       where: {
@@ -545,7 +555,7 @@ router.get('/team/capacity-overview', authenticateToken, async (req: Request, re
     });
 
     // Calculate capacity metrics for each team member
-    const teamCapacity = teamMembers.map(member => {
+    const teamCapacity = teamMembers.map((member: any) => {
       const currentWorkload = (member as any).assignedWorkUnits.length + (member as any).assignedTasks.length;
       const maxCapacity = 5; // Default max concurrent tasks
       const utilization = (currentWorkload / maxCapacity) * 100;
@@ -590,12 +600,12 @@ router.get('/team/capacity-overview', authenticateToken, async (req: Request, re
 
     // Calculate team-wide metrics
     const totalMembers = teamMembers.length;
-    const availableMembers = teamCapacity.filter(member => member.capacity.status === 'available').length;
-    const busyMembers = teamCapacity.filter(member => member.capacity.status === 'busy').length;
-    const overloadedMembers = teamCapacity.filter(member => member.capacity.status === 'overloaded').length;
+    const availableMembers = teamCapacity.filter((member: any) => member.capacity.status === 'available').length;
+    const busyMembers = teamCapacity.filter((member: any) => member.capacity.status === 'busy').length;
+    const overloadedMembers = teamCapacity.filter((member: any) => member.capacity.status === 'overloaded').length;
 
-    const totalCapacity = teamCapacity.reduce((sum, member) => sum + member.capacity.maxCapacity, 0);
-    const totalUtilization = teamCapacity.reduce((sum, member) => sum + member.capacity.currentWorkload, 0);
+    const totalCapacity = teamCapacity.reduce((sum: number, member: any) => sum + member.capacity.maxCapacity, 0);
+    const totalUtilization = teamCapacity.reduce((sum: number, member: any) => sum + member.capacity.currentWorkload, 0);
     const overallUtilization = totalCapacity > 0 ? (totalUtilization / totalCapacity) * 100 : 0;
 
     res.json({
@@ -609,7 +619,7 @@ router.get('/team/capacity-overview', authenticateToken, async (req: Request, re
         totalCapacity,
         totalUtilization
       },
-      teamCapacity: teamCapacity.sort((a, b) => b.capacity.utilization - a.capacity.utilization),
+      teamCapacity: teamCapacity.sort((a: any, b: any) => b.capacity.utilization - a.capacity.utilization),
       recommendations: generateTeamRecommendations(teamCapacity)
     });
   } catch (error) {
@@ -894,7 +904,7 @@ function generateTeamRecommendations(teamCapacity: any[]) {
     });
   }
 
-  const avgUtilization = teamCapacity.reduce((sum, member) => sum + member.capacity.utilization, 0) / teamCapacity.length;
+  const avgUtilization = teamCapacity.reduce((sum: number, member: any) => sum + member.capacity.utilization, 0) / teamCapacity.length;
   
   if (avgUtilization < 50) {
     recommendations.push({

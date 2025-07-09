@@ -14,7 +14,7 @@ datasource db {
 model Company {
   id               String   @id @default(cuid())
   name             String
-  industry         String? // automotive, aerospace, etc.
+  industry         String? // technology, manufacturing, aerospace, automotive, healthcare, energy, construction, etc.
   companySize      String? // small, medium, large
   subscriptionTier String   @default("basic") // basic, pro, enterprise
   settings         Json? // Company-specific configurations
@@ -519,17 +519,17 @@ model ProcessTemplate {
   @@map("process_templates")
 }
 
-// Design Templates (for standardized design workflows)
+// Design Template Management
 model DesignTemplate {
-  id           String   @id @default(cuid())
-  name         String
-  description  String?
-  designType   String // assembly, component, system, etc.
-  industry     String? // automotive, aerospace, etc.
-  templateData Json // Design workflow, checkpoints, file types
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  designType     String // assembly, component, system, etc.
+  industry       String? // technology, manufacturing, aerospace, automotive, healthcare, energy, construction, etc.
+  templateData   Json // Design workflow, checkpoints, file types
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   companyId String

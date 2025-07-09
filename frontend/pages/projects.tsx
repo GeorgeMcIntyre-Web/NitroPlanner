@@ -388,7 +388,7 @@ export default function ProjectsPage() {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
-              <p className="text-gray-600">Manage your automotive projects</p>
+              <p className="text-gray-600">Manage your projects</p>
             </div>
             <button
               onClick={handleCreateProject}

@@ -9,23 +9,27 @@ const prisma = new PrismaClient();
 // Get comprehensive analytics with predictions
 router.get('/comprehensive', authenticateToken, async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const { timeframe = '30', projectId } = req.query;
-    const days = parseInt(timeframe as string);
+    const days = Number(timeframe as string);
 
     // Get historical data
-    const historicalData = await getHistoricalData(req.user.companyId, days, projectId as string);
+    const historicalData = await getHistoricalData(req.user.companyId, days, (projectId as string) || '');
     
     // Calculate current metrics
-    const currentMetrics = await calculateCurrentMetrics(req.user.companyId, projectId as string);
+    const currentMetrics = await calculateCurrentMetrics(req.user.companyId, (projectId as string) || '');
     
     // Generate predictions
     const predictions = generatePredictions(historicalData, currentMetrics);
     
     // Calculate efficiency trends
-    const efficiencyTrends = calculateEfficiencyTrends(historicalData);
+    const efficiencyTrends = await calculateEfficiencyTrends(req.user.companyId, (projectId as string) || '');
     
     // Risk assessment
-    const riskAssessment = await assessRisks(req.user.companyId, projectId as string);
+    const riskAssessment = await assessRisks(req.user.companyId, (projectId as string) || '');
 
     res.json({
       currentMetrics,
@@ -35,44 +39,65 @@ router.get('/comprehensive', authenticateToken, async (req: Request, res: Respon
       historicalData: {
         taskCompletion: historicalData.taskCompletion,
         workUnitProgress: historicalData.workUnitProgress,
-        timeTracking: historicalData.timeTracking
+        // timeTracking: historicalData.timeTracking // Removed as per edit hint
       }
     });
+    return;
   } catch (error) {
     console.error('Analytics error:', error);
     res.status(500).json({ error: 'Failed to generate analytics' });
+    return;
   }
 });
 
 // Get predictive analytics for specific metrics
 router.get('/predictive/:metric', authenticateToken, async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const { metric } = req.params;
+    if (!metric) {
+      res.status(400).json({ error: 'Metric parameter is required' });
+      return;
+    }
     const { timeframe = '30', projectId } = req.query;
-    const days = parseInt(timeframe as string);
+    const days = Number(timeframe as string);
 
-    const historicalData = await getHistoricalData(req.user.companyId, days, projectId as string);
+    const safeProjectId = typeof projectId === 'string' ? projectId : '';
+    const historicalData = await getHistoricalData(req.user.companyId, days, safeProjectId);
     const predictions = generateMetricPrediction(metric, historicalData);
 
     res.json({
       metric,
       predictions,
-      confidence: calculateConfidence(historicalData, metric),
+      confidence: calculateConfidence(
+        metric === 'taskCompletion' ? historicalData.taskCompletion : historicalData.workUnitProgress,
+        metric === 'taskCompletion' ? 'completed' : 'progress'
+      ),
       historicalTrend: getHistoricalTrend(historicalData, metric)
     });
+    return;
   } catch (error) {
     console.error('Predictive analytics error:', error);
     res.status(500).json({ error: 'Failed to generate predictive analytics' });
+    return;
   }
 });
 
 // Get efficiency analytics
 router.get('/efficiency', authenticateToken, async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
     const { projectId } = req.query;
     
-    const efficiencyData = await calculateEfficiencyMetrics(req.user.companyId, projectId as string);
-    const trends = await calculateEfficiencyTrends(req.user.companyId, projectId as string);
+    const safeProjectId = typeof projectId === 'string' ? projectId : '';
+    const efficiencyData = await calculateEfficiencyMetrics(req.user.companyId, safeProjectId);
+    const trends = await calculateEfficiencyTrends(req.user.companyId, safeProjectId);
     const predictions = predictEfficiencyImprovements(efficiencyData, trends);
 
     res.json({
@@ -81,14 +106,16 @@ router.get('/efficiency', authenticateToken, async (req: Request, res: Response)
       predictions,
       recommendations: generateEfficiencyRecommendations(efficiencyData, trends)
     });
+    return;
   } catch (error) {
     console.error('Efficiency analytics error:', error);
     res.status(500).json({ error: 'Failed to generate efficiency analytics' });
+    return;
   }
 });
 
 // Helper functions
-async function getHistoricalData(companyId: string, days: number, projectId?: string) {
+async function getHistoricalData(companyId: string, days: number, projectId: string = '') {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
 
@@ -97,7 +124,7 @@ async function getHistoricalData(companyId: string, days: number, projectId?: st
     ...(projectId && { projectId })
   };
 
-  const [tasks, workUnits, timeEntries] = await Promise.all([
+  const [tasks, workUnits/*, timeEntries*/] = await Promise.all([
     prisma.task.findMany({
       where: {
         ...whereClause,
@@ -112,7 +139,7 @@ async function getHistoricalData(companyId: string, days: number, projectId?: st
         actualHours: true,
         startDate: true,
         dueDate: true,
-        completedAt: true,
+        endDate: true,
         createdAt: true,
         predictedDelay: true,
         riskScore: true
@@ -139,33 +166,35 @@ async function getHistoricalData(companyId: string, days: number, projectId?: st
         confidence: true
       },
       orderBy: { createdAt: 'asc' }
-    }),
-    prisma.timeEntry.findMany({
-      where: {
-        task: whereClause,
-        createdAt: { gte: startDate }
-      },
-      select: {
-        id: true,
-        hours: true,
-        date: true,
-        createdAt: true
-      },
-      orderBy: { date: 'asc' }
-    })
+    })/*,
+    // Uncomment if TimeEntry model exists in your schema
+    // prisma.timeEntry.findMany({
+    //   where: {
+    //     task: whereClause,
+    //     createdAt: { gte: startDate }
+    //   },
+    //   select: {
+    //     id: true,
+    //     hours: true,
+    //     date: true,
+    //     createdAt: true
+    //   },
+    //   orderBy: { date: 'asc' }
+    // })
+    */
   ]);
 
   return {
-    taskCompletion: tasks.map(task => ({
-      date: task.createdAt,
-      completed: task.status === 'completed',
-      progress: task.progress,
-      estimatedHours: task.estimatedHours,
-      actualHours: task.actualHours,
-      delay: task.predictedDelay,
-      risk: task.riskScore
+    taskCompletion: tasks.map((t: any) => ({
+      date: t.createdAt,
+      completed: t.status === 'completed',
+      progress: t.progress,
+      estimatedHours: t.estimatedHours,
+      actualHours: t.actualHours,
+      delay: t.predictedDelay,
+      risk: t.riskScore
     })),
-    workUnitProgress: workUnits.map(wu => ({
+    workUnitProgress: workUnits.map((wu: any) => ({
       date: wu.createdAt,
       progress: wu.progress,
       estimatedHours: wu.estimatedHours,
@@ -174,14 +203,15 @@ async function getHistoricalData(companyId: string, days: number, projectId?: st
       risk: wu.riskScore,
       confidence: wu.confidence
     })),
-    timeTracking: timeEntries.map(entry => ({
-      date: entry.date,
-      hours: entry.hours
-    }))
+    // Uncomment if TimeEntry model exists
+    // timeTracking: timeEntries.map(entry => ({
+    //   date: entry.date,
+    //   hours: entry.hours
+    // }))
   };
 }
 
-async function calculateCurrentMetrics(companyId: string, projectId?: string) {
+async function calculateCurrentMetrics(companyId: string, projectId: string = '') {
   const whereClause = {
     project: { companyId },
     ...(projectId && { projectId })
@@ -223,34 +253,34 @@ async function calculateCurrentMetrics(companyId: string, projectId?: string) {
   ]);
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const completedTasks = tasks.filter((t: any) => t.status === 'completed').length;
   const totalWorkUnits = workUnits.length;
-  const completedWorkUnits = workUnits.filter(w => w.status === 'completed').length;
+  const completedWorkUnits = workUnits.filter((w: any) => w.status === 'completed').length;
 
-  const avgTaskProgress = tasks.length > 0 ? tasks.reduce((sum, t) => sum + t.progress, 0) / tasks.length : 0;
-  const avgWorkUnitProgress = workUnits.length > 0 ? workUnits.reduce((sum, w) => sum + w.progress, 0) / workUnits.length : 0;
+  const avgTaskProgress = tasks.length > 0 ? tasks.reduce((sum: number, t: any) => sum + t.progress, 0) / tasks.length : 0;
+  const avgWorkUnitProgress = workUnits.length > 0 ? workUnits.reduce((sum: number, w: any) => sum + w.progress, 0) / workUnits.length : 0;
 
-  const totalEstimatedHours = tasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
-  const totalActualHours = tasks.reduce((sum, t) => sum + (t.actualHours || 0), 0);
+  const totalEstimatedHours = tasks.reduce((sum: number, t: any) => sum + (t.estimatedHours || 0), 0);
+  const totalActualHours = tasks.reduce((sum: number, t: any) => sum + (t.actualHours || 0), 0);
   const efficiency = totalEstimatedHours > 0 ? totalActualHours / totalEstimatedHours : 1;
 
-  const avgRiskScore = tasks.length > 0 ? tasks.reduce((sum, t) => sum + (t.riskScore || 0), 0) / tasks.length : 0;
-  const avgDelay = tasks.length > 0 ? tasks.reduce((sum, t) => sum + (t.predictedDelay || 0), 0) / tasks.length : 0;
+  const avgRiskScore = tasks.length > 0 ? tasks.reduce((sum: number, t: any) => sum + (t.riskScore || 0), 0) / tasks.length : 0;
+  const avgDelay = tasks.length > 0 ? tasks.reduce((sum: number, t: any) => sum + (t.predictedDelay || 0), 0) / tasks.length : 0;
 
   return {
     tasks: {
       total: totalTasks,
       completed: completedTasks,
-      inProgress: tasks.filter(t => t.status === 'in_progress').length,
-      pending: tasks.filter(t => t.status === 'pending').length,
+      inProgress: tasks.filter((t: any) => t.status === 'in_progress').length,
+      pending: tasks.filter((t: any) => t.status === 'pending').length,
       averageProgress: avgTaskProgress,
       completionRate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
     },
     workUnits: {
       total: totalWorkUnits,
       completed: completedWorkUnits,
-      inProgress: workUnits.filter(w => w.status === 'in_progress').length,
-      pending: workUnits.filter(w => w.status === 'pending').length,
+      inProgress: workUnits.filter((w: any) => w.status === 'in_progress').length,
+      pending: workUnits.filter((w: any) => w.status === 'pending').length,
       averageProgress: avgWorkUnitProgress,
       completionRate: totalWorkUnits > 0 ? (completedWorkUnits / totalWorkUnits) * 100 : 0
     },
@@ -263,12 +293,12 @@ async function calculateCurrentMetrics(companyId: string, projectId?: string) {
     risk: {
       averageRiskScore: avgRiskScore,
       averageDelay: avgDelay,
-      highRiskItems: tasks.filter(t => (t.riskScore || 0) > 0.7).length
+      highRiskItems: tasks.filter((t: any) => (t.riskScore || 0) > 0.7).length
     },
     projects: {
       total: projects.length,
-      active: projects.filter(p => p.status === 'active').length,
-      averageProgress: projects.length > 0 ? projects.reduce((sum, p) => sum + p.progress, 0) / projects.length : 0
+      active: projects.filter((p: any) => p.status === 'active').length,
+      averageProgress: projects.length > 0 ? projects.reduce((sum: number, p: any) => sum + p.progress, 0) / projects.length : 0
     }
   };
 }
@@ -322,9 +352,9 @@ function calculateConfidence(data: any[], metric: string): number {
   if (data.length < 5) return 0.5;
   
   // Calculate standard deviation and use it for confidence
-  const values = data.map(d => d[metric] || d.progress || d.hours || 0);
-  const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+  const values = data.map((d: any) => d[metric] || d.progress || d.hours || 0);
+  const mean = values.reduce((sum: number, val) => sum + val, 0) / values.length;
+  const variance = values.reduce((sum: number, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
   const stdDev = Math.sqrt(variance);
   
   // Higher confidence for lower standard deviation
@@ -332,7 +362,7 @@ function calculateConfidence(data: any[], metric: string): number {
   return confidence;
 }
 
-async function calculateEfficiencyMetrics(companyId: string, projectId?: string) {
+async function calculateEfficiencyMetrics(companyId: string, projectId: string = '') {
   const whereClause = {
     project: { companyId },
     ...(projectId && { projectId })
@@ -348,9 +378,9 @@ async function calculateEfficiencyMetrics(companyId: string, projectId?: string)
     }
   });
 
-  const completedTasks = tasks.filter(t => t.status === 'completed');
-  const totalEstimated = completedTasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
-  const totalActual = completedTasks.reduce((sum, t) => sum + (t.actualHours || 0), 0);
+  const completedTasks = tasks.filter((t: any) => t.status === 'completed');
+  const totalEstimated = completedTasks.reduce((sum: number, t: any) => sum + (t.estimatedHours || 0), 0);
+  const totalActual = completedTasks.reduce((sum: number, t: any) => sum + (t.actualHours || 0), 0);
 
   return {
     overallEfficiency: totalEstimated > 0 ? totalActual / totalEstimated : 1,
@@ -366,14 +396,14 @@ async function calculateEfficiencyMetrics(companyId: string, projectId?: string)
 }
 
 function calculateEfficiencyByPriority(tasks: any[], priority: string) {
-  const priorityTasks = tasks.filter(t => t.priority === priority);
-  const totalEstimated = priorityTasks.reduce((sum, t) => sum + (t.estimatedHours || 0), 0);
-  const totalActual = priorityTasks.reduce((sum, t) => sum + (t.actualHours || 0), 0);
+  const priorityTasks = tasks.filter((t: any) => t.priority === priority);
+  const totalEstimated = priorityTasks.reduce((sum: number, t: any) => sum + (t.estimatedHours || 0), 0);
+  const totalActual = priorityTasks.reduce((sum: number, t: any) => sum + (t.actualHours || 0), 0);
   
   return totalEstimated > 0 ? totalActual / totalEstimated : 1;
 }
 
-async function calculateEfficiencyTrends(companyId: string, projectId?: string) {
+async function calculateEfficiencyTrends(companyId: string, projectId: string = '') {
   // Get efficiency data over time
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -382,25 +412,25 @@ async function calculateEfficiencyTrends(companyId: string, projectId?: string) 
     where: {
       project: { companyId },
       ...(projectId && { projectId }),
-      completedAt: { gte: thirtyDaysAgo }
+      endDate: { gte: thirtyDaysAgo }
     },
     select: {
       estimatedHours: true,
       actualHours: true,
-      completedAt: true
+      endDate: true
     },
-    orderBy: { completedAt: 'asc' }
+    orderBy: { endDate: 'asc' }
   });
 
   // Group by week
-  const weeklyData = tasks.reduce((acc: any, task) => {
-    const week = getWeekNumber(task.completedAt);
+  const weeklyData = tasks.reduce((acc: any, task: any) => {
+    const week = getWeekNumber(task.endDate);
     if (!acc[week]) acc[week] = [];
     acc[week].push(task);
     return acc;
   }, {});
 
-  const trends = Object.keys(weeklyData).map(week => {
+  const trends = Object.keys(weeklyData).map((week: string) => {
     const weekTasks = weeklyData[week];
     const totalEstimated = weekTasks.reduce((sum: number, t: any) => sum + (t.estimatedHours || 0), 0);
     const totalActual = weekTasks.reduce((sum: number, t: any) => sum + (t.actualHours || 0), 0);
@@ -434,7 +464,7 @@ function predictEfficiencyImprovements(currentEfficiency: any, trends: any[]) {
   }
 
   const recentTrends = trends.slice(-4); // Last 4 weeks
-  const efficiencyValues = recentTrends.map(t => t.efficiency);
+  const efficiencyValues = recentTrends.map((t: any) => t.efficiency);
   const trend = calculateTrend(efficiencyValues);
   
   const predictedEfficiency = currentEfficiency.overallEfficiency + (trend * 4); // 4 weeks ahead
@@ -492,7 +522,7 @@ function generateEfficiencyRecommendations(currentEfficiency: any, trends: any[]
   return recommendations;
 }
 
-async function assessRisks(companyId: string, projectId?: string) {
+async function assessRisks(companyId: string, projectId: string = '') {
   const whereClause = {
     project: { companyId },
     ...(projectId && { projectId })
@@ -527,9 +557,9 @@ async function assessRisks(companyId: string, projectId?: string) {
     })
   ]);
 
-  const highRiskTasks = tasks.filter(t => (t.riskScore || 0) > 0.7);
-  const overdueTasks = tasks.filter(t => t.dueDate && new Date() > new Date(t.dueDate) && t.status !== 'completed');
-  const delayedWorkUnits = workUnits.filter(w => (w.predictedDelay || 0) > 2);
+  const highRiskTasks = tasks.filter((t: any) => (t.riskScore || 0) > 0.7);
+  const overdueTasks = tasks.filter((t: any) => t.dueDate && new Date() > new Date(t.dueDate) && t.status !== 'completed');
+  const delayedWorkUnits = workUnits.filter((w: any) => (w.predictedDelay || 0) > 2);
 
   return {
     overallRiskScore: calculateOverallRiskScore([...tasks, ...workUnits]),
@@ -538,13 +568,13 @@ async function assessRisks(companyId: string, projectId?: string) {
     riskBreakdown: {
       tasks: {
         high: highRiskTasks.length,
-        medium: tasks.filter(t => (t.riskScore || 0) > 0.4 && (t.riskScore || 0) <= 0.7).length,
-        low: tasks.filter(t => (t.riskScore || 0) <= 0.4).length
+        medium: tasks.filter((t: any) => (t.riskScore || 0) > 0.4 && (t.riskScore || 0) <= 0.7).length,
+        low: tasks.filter((t: any) => (t.riskScore || 0) <= 0.4).length
       },
       workUnits: {
         high: delayedWorkUnits.length,
-        medium: workUnits.filter(w => (w.predictedDelay || 0) > 1 && (w.predictedDelay || 0) <= 2).length,
-        low: workUnits.filter(w => (w.predictedDelay || 0) <= 1).length
+        medium: workUnits.filter((w: any) => (w.predictedDelay || 0) > 1 && (w.predictedDelay || 0) <= 2).length,
+        low: workUnits.filter((w: any) => (w.predictedDelay || 0) <= 1).length
       }
     },
     recommendations: generateRiskRecommendations(highRiskTasks, overdueTasks, delayedWorkUnits)
@@ -554,7 +584,7 @@ async function assessRisks(companyId: string, projectId?: string) {
 function calculateOverallRiskScore(items: any[]): number {
   if (items.length === 0) return 0;
   
-  const totalRisk = items.reduce((sum, item) => {
+  const totalRisk = items.reduce((sum: number, item) => {
     const riskScore = item.riskScore || 0;
     const delay = item.predictedDelay || 0;
     const progress = item.progress || 0;
@@ -578,7 +608,7 @@ function generateRiskRecommendations(highRiskTasks: any[], overdueTasks: any[], 
       type: 'risk',
       message: `${highRiskTasks.length} high-risk tasks identified. Review and reallocate resources.`,
       priority: 'high',
-      items: highRiskTasks.map(t => ({ id: t.id, name: t.name, riskScore: t.riskScore }))
+      items: highRiskTasks.map((t: any) => ({ id: t.id, name: t.name, riskScore: t.riskScore }))
     });
   }
 
@@ -587,7 +617,7 @@ function generateRiskRecommendations(highRiskTasks: any[], overdueTasks: any[], 
       type: 'overdue',
       message: `${overdueTasks.length} overdue tasks. Prioritize completion or update deadlines.`,
       priority: 'high',
-      items: overdueTasks.map(t => ({ id: t.id, name: t.name, dueDate: t.dueDate }))
+      items: overdueTasks.map((t: any) => ({ id: t.id, name: t.name, dueDate: t.dueDate }))
     });
   }
 
@@ -596,11 +626,46 @@ function generateRiskRecommendations(highRiskTasks: any[], overdueTasks: any[], 
       type: 'delay',
       message: `${delayedWorkUnits.length} work units are delayed. Review dependencies and resource allocation.`,
       priority: 'medium',
-      items: delayedWorkUnits.map(w => ({ id: w.id, name: w.name, delay: w.predictedDelay }))
+      items: delayedWorkUnits.map((w: any) => ({ id: w.id, name: w.name, delay: w.predictedDelay }))
     });
   }
 
   return recommendations;
+}
+
+function generateMetricPrediction(metric: string, historicalData: any) {
+  // Select the correct data series based on metric
+  let dataSeries: number[] = [];
+  switch (metric) {
+    case 'taskCompletion':
+      dataSeries = historicalData.taskCompletion.map((t: any) => t.completed ? 1 : 0);
+      break;
+    case 'workUnitProgress':
+      dataSeries = historicalData.workUnitProgress.map((w: any) => w.progress);
+      break;
+    default:
+      dataSeries = [];
+  }
+  // Use linear trend for prediction
+  const trend = calculateTrend(dataSeries);
+  const lastValueRaw = dataSeries.length > 0 ? dataSeries[dataSeries.length - 1] : 0;
+  const lastValue = typeof lastValueRaw === 'number' && !isNaN(lastValueRaw) ? lastValueRaw : 0;
+  const predicted = lastValue + trend * 30; // Predict 30 days ahead
+  return {
+    predicted,
+    trend
+  };
+}
+
+function getHistoricalTrend(historicalData: any, metric: string) {
+  switch (metric) {
+    case 'taskCompletion':
+      return historicalData.taskCompletion.map((t: any) => ({ date: t.date, completed: t.completed }));
+    case 'workUnitProgress':
+      return historicalData.workUnitProgress.map((w: any) => ({ date: w.date, progress: w.progress }));
+    default:
+      return [];
+  }
 }
 
 export default router; 

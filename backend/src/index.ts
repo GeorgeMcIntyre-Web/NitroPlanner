@@ -2,10 +2,11 @@ console.log('🔥 BACKEND SERVER STARTED - THIS IS THE REAL ONE!');
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import { usersRouter, projectsRouter, authRouter } from './routes';
+import router from './routes';
 import importExportRouter from './routes/import-export';
 import analyticsRouter from './routes/analytics';
 import digitalTwinRouter from './routes/digital-twin';
+import { Request, Response } from 'express';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -17,10 +18,7 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Core routes
-app.use('/api/users', usersRouter);
-app.use('/api/projects', projectsRouter);
-console.log('IMPORTING AUTH ROUTES');
-app.use('/api/auth', authRouter);
+app.use('/api', router);
 
 // New feature routes
 app.use('/api/import-export', importExportRouter);
@@ -28,10 +26,12 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/digital-twin', digitalTwinRouter);
 
 // Health check endpoint for test scripts and monitoring
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-}); 
+});
+
+export default app; 

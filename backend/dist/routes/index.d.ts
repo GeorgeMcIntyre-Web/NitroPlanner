@@ -1,5 +1,3 @@
-import usersRouter from './users';
-import projectsRouter from './projects';
-import authRouter from './auth';
-export { usersRouter, projectsRouter, authRouter };
+declare const router: import("express-serve-static-core").Router;
+export default router;
 //# sourceMappingURL=index.d.ts.map

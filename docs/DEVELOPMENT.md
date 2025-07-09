@@ -1,468 +1,479 @@
-# NitroPlanner Development Guide
+# Development Guide
 
-## 🚀 Quick Start
+This guide covers the professional development setup for NitroPlanner, including best practices, workflows, and troubleshooting.
 
-### Prerequisites
-- **Python 3.9+**: [Download Python](https://www.python.org/downloads/)
-- **Node.js 18+**: [Download Node.js](https://nodejs.org/)
-- **Git**: [Download Git](https://git-scm.com/)
-- **Docker** (optional): [Download Docker](https://www.docker.com/products/docker-desktop/)
+## 🏗️ Architecture Overview
 
-### Windows Setup
-1. **Clone the repository:**
-   ```powershell
-   git clone <your-repo-url>
-   cd NitroPlanner
-   ```
+NitroPlanner follows a modern, scalable architecture:
 
-2. **Run the development script:**
-   ```powershell
-   .\scripts\dev.ps1
-   ```
+- **Frontend**: Next.js 14 with TypeScript, Tailwind CSS, and React Query
+- **Backend**: Node.js with Express, TypeScript, and Prisma ORM
+- **Database**: PostgreSQL with Redis for caching
+- **Containerization**: Docker with multi-stage builds
+- **Testing**: Jest for both frontend and backend
+- **Linting**: ESLint with TypeScript support
+- **CI/CD**: Ready for GitHub Actions or similar
 
-3. **Access the application:**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - API Health Check: http://localhost:5000/api/health
+## 🚀 Development Workflows
 
-### Manual Setup
+### 1. Local Development (Recommended)
 
-#### Backend Setup
+This is the fastest way to develop and debug:
+
 ```bash
-cd backend
+# Initial setup (one-time)
+npm run setup
 
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-.\venv\Scripts\Activate.ps1
-# Linux/Mac:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python app.py
-```
-
-#### Frontend Setup
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start development server
+# Start development
 npm run dev
 ```
 
-## 🏗️ Project Architecture
+**Benefits:**
+- Fast hot reloading
+- Direct access to logs
+- Easy debugging with VS Code
+- No Docker overhead
 
-### Backend (Flask)
-```
-backend/
-├── app.py              # Main Flask application
-├── app_simple.py       # Simplified version for testing
-├── seed_data.py        # Database seeding script
-├── requirements.txt    # Python dependencies
-├── Dockerfile         # Docker configuration
-└── venv/              # Virtual environment (created)
-```
+### 2. Docker Development
 
-### Frontend (Next.js)
-```
-frontend/
-├── pages/             # Next.js pages
-│   ├── index.tsx      # Dashboard
-│   ├── kanban.tsx     # Kanban board
-│   ├── gantt.tsx      # Gantt chart
-│   ├── work-units.tsx # Work units
-│   └── simulation.tsx # Monte Carlo simulation
-├── components/        # React components
-├── styles/           # CSS styles
-├── package.json      # Node.js dependencies
-└── next.config.js    # Next.js configuration
+For consistent environments across team members:
+
+```bash
+# Start with Docker
+npm run docker:up
+
+# View logs
+npm run docker:logs
 ```
 
-## 🔧 Configuration
+**Benefits:**
+- Consistent environment
+- Includes all services (DB, Redis)
+- Production-like setup
+- Easy to share configurations
+
+### 3. Hybrid Approach
+
+Run services individually based on needs:
+
+```bash
+# Start only database and Redis
+docker-compose up -d postgres redis
+
+# Start backend locally
+npm run dev:backend
+
+# Start frontend locally
+npm run dev:frontend
+```
+
+## 📁 Project Structure
+
+```
+NitroPlanner/
+├── backend/                    # Node.js/TypeScript API
+│   ├── src/
+│   │   ├── routes/            # API route handlers
+│   │   ├── middleware/        # Express middleware
+│   │   ├── types/            # TypeScript type definitions
+│   │   └── index.ts          # Main application entry
+│   ├── prisma/               # Database schema and migrations
+│   ├── tests/                # Backend tests
+│   ├── Dockerfile            # Backend container
+│   └── package.json
+├── frontend/                  # Next.js React application
+│   ├── components/           # Reusable React components
+│   ├── pages/               # Next.js pages
+│   ├── contexts/            # React contexts
+│   ├── utils/               # Utility functions
+│   ├── __tests__/           # Frontend tests
+│   ├── Dockerfile           # Frontend container
+│   └── package.json
+├── scripts/                  # Development scripts
+│   └── dev.ps1              # Windows PowerShell script
+├── docs/                    # Documentation
+├── docker-compose.yml       # Docker orchestration
+├── env.example              # Environment variables template
+└── package.json            # Root workspace configuration
+```
+
+## 🔧 Development Tools
+
+### Code Quality
+
+#### Backend (TypeScript/Node.js)
+
+```bash
+cd backend
+
+# Linting
+npm run lint                 # Check for issues
+npm run lint:fix            # Auto-fix issues
+
+# Type checking
+npm run type-check          # TypeScript compilation check
+
+# Testing
+npm run test                # Run all tests
+npm run test:watch          # Watch mode
+npm run test:coverage       # With coverage report
+```
+
+#### Frontend (Next.js/React)
+
+```bash
+cd frontend
+
+# Linting
+npm run lint                # ESLint check
+
+# Testing
+npm run test                # Run all tests
+npm run test:watch          # Watch mode
+npm run test:coverage       # With coverage report
+```
+
+### Database Management
+
+```bash
+# Backend directory
+cd backend
+
+# Migrations
+npm run db:migrate          # Create and apply migrations
+npm run db:deploy           # Deploy migrations to production
+npm run db:reset            # Reset database (development only)
+
+# Database tools
+npm run db:studio           # Open Prisma Studio (GUI)
+npm run db:seed             # Seed with sample data
+```
+
+### Building for Production
+
+```bash
+# Build both applications
+npm run build
+
+# Build individually
+npm run build:backend
+npm run build:frontend
+```
+
+## 🌐 Environment Configuration
 
 ### Environment Variables
 
-#### Backend (.env)
-Create a `.env` file in the `backend/` directory:
+Copy the example file and configure:
+
 ```bash
-# Database Configuration
-DATABASE_URL=sqlite:///nitro_planner.db
-REDIS_URL=redis://localhost:6379
-
-# Security
-SECRET_KEY=dev-secret-key-change-in-production
-JWT_SECRET_KEY=dev-jwt-secret-change-in-production
-
-# CORS
-CORS_ORIGIN=http://localhost:3000
-
-# AI Integration
-ABACUS_AI_API_KEY=your-abacus-ai-api-key-here
-
-# Flask Configuration
-FLASK_ENV=development
-FLASK_DEBUG=True
-PORT=5000
-
-# Logging
-LOG_LEVEL=INFO
+cp env.example .env
 ```
 
-#### Frontend (.env.local)
-Create a `.env.local` file in the `frontend/` directory:
+#### Key Variables
+
+**Backend:**
+- `DATABASE_URL`: PostgreSQL connection string
+- `JWT_SECRET`: Secret for JWT tokens
+- `CORS_ORIGIN`: Allowed frontend origins
+- `PORT`: Server port (default: 5000)
+
+**Frontend:**
+- `NEXT_PUBLIC_API_URL`: Backend API URL
+- `NEXT_PUBLIC_APP_URL`: Frontend URL
+
+**Development:**
+- `NODE_ENV`: Set to "development"
+- `REDIS_URL`: Redis connection (optional for caching)
+
+### Database Setup
+
+The application uses PostgreSQL with Prisma ORM:
+
+1. **Local PostgreSQL**: Install and configure
+2. **Docker PostgreSQL**: Use `docker-compose up postgres`
+3. **Cloud PostgreSQL**: Update `DATABASE_URL`
+
 ```bash
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:5000
-
-# Environment
-NODE_ENV=development
-
-# Analytics (optional)
-NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id-here
+# Setup database (creates tables and seeds data)
+npm run db:setup
 ```
 
-## 🧪 Testing
+## 🧪 Testing Strategy
 
 ### Backend Testing
+
+**Test Structure:**
+```
+backend/tests/
+├── unit/                   # Unit tests
+├── integration/           # Integration tests
+├── e2e/                  # End-to-end tests
+└── fixtures/             # Test data
+```
+
+**Running Tests:**
 ```bash
 cd backend
 
-# Install test dependencies
-pip install pytest pytest-cov pytest-mock
+# All tests
+npm run test
 
-# Run tests
-python -m pytest
+# Specific test file
+npm test -- tests/auth.test.ts
 
-# Run tests with coverage
-python -m pytest --cov=. --cov-report=html
-
-# Run specific test file
-python -m pytest tests/test_app.py
+# With coverage
+npm run test:coverage
 ```
 
 ### Frontend Testing
+
+**Test Structure:**
+```
+frontend/__tests__/
+├── components/            # Component tests
+├── pages/                # Page tests
+└── utils/                # Utility tests
+```
+
+**Running Tests:**
 ```bash
 cd frontend
 
-# Install test dependencies
-npm install --save-dev @testing-library/react @testing-library/jest-dom jest
+# All tests
+npm run test
 
-# Run tests
-npm test
+# Specific test
+npm test -- components/Button.test.tsx
 
-# Run tests in watch mode
-npm test -- --watch
+# With coverage
+npm run test:coverage
 ```
 
-## 🔍 Code Quality
+### Testing Best Practices
 
-### Backend Code Quality
-```bash
-cd backend
-
-# Install linting tools
-pip install black flake8 bandit
-
-# Format code
-black .
-
-# Lint code
-flake8 .
-
-# Security check
-bandit -r .
-```
-
-### Frontend Code Quality
-```bash
-cd frontend
-
-# Lint code
-npm run lint
-
-# Fix linting issues
-npm run lint -- --fix
-
-# Type checking
-npx tsc --noEmit
-```
+1. **Unit Tests**: Test individual functions and components
+2. **Integration Tests**: Test API endpoints and database operations
+3. **E2E Tests**: Test complete user workflows
+4. **Mock External Services**: Use MSW for API mocking
+5. **Test Data**: Use factories and fixtures for consistent data
 
 ## 🐳 Docker Development
 
-### Using Docker Compose
+### Container Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   PostgreSQL    │
+│   (Next.js)     │◄──►│   (Express)     │◄──►│   (Database)    │
+│   Port: 3000    │    │   Port: 5000    │    │   Port: 5432    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │     Redis       │
+                       │   (Cache)       │
+                       │   Port: 6379    │
+                       └─────────────────┘
+```
+
+### Docker Commands
+
 ```bash
 # Start all services
-docker-compose up
-
-# Start in background
 docker-compose up -d
 
-# Start specific service
-docker-compose up backend
+# Start specific services
+docker-compose up -d postgres redis
 
-# Rebuild and start
-docker-compose up --build
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Rebuild images
+docker-compose build --no-cache
 
 # Stop all services
 docker-compose down
 
-# View logs
-docker-compose logs -f
+# Clean up volumes
+docker-compose down -v
 ```
 
-### Using Docker Profiles
+### Development with Docker
+
+**Option 1: Full Containerized**
 ```bash
-# Start with monitoring
-docker-compose --profile monitoring up
-
-# Start production-like setup
-docker-compose --profile production up
-
-# Start all profiles
-docker-compose --profile monitoring --profile production up
+# All services in containers
+docker-compose up -d
 ```
 
-## 📊 Database Management
-
-### SQLite (Development)
-The application uses SQLite by default for development:
+**Option 2: Hybrid**
 ```bash
-# Database file location
-backend/nitro_planner.db
-
-# Reset database
-rm backend/nitro_planner.db
-python backend/seed_data.py
+# Database in container, apps locally
+docker-compose up -d postgres redis
+npm run dev:backend
+npm run dev:frontend
 ```
 
-### PostgreSQL (Production)
-For production, use PostgreSQL:
-```bash
-# Update DATABASE_URL in .env
-DATABASE_URL=postgresql://username:password@localhost:5432/nitro_planner
+## 🔍 Debugging
 
-# Run migrations
+### Backend Debugging
+
+**VS Code Configuration:**
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Backend",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/index.ts",
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  ]
+}
+```
+
+**Logging:**
+```typescript
+// Use structured logging
+console.log('User created:', { userId, email, role });
+console.error('Database error:', { error: err.message, query });
+```
+
+### Frontend Debugging
+
+**React Developer Tools**: Install browser extension
+**Next.js Debug**: Use `NODE_OPTIONS='--inspect' npm run dev`
+
+### Database Debugging
+
+**Prisma Studio:**
+```bash
 cd backend
-flask db upgrade
+npm run db:studio
 ```
 
-## 🔄 API Development
-
-### Core Endpoints
-- `GET /api/health` - Health check
-- `GET /api/projects` - List projects
-- `POST /api/projects` - Create project
-- `GET /api/tasks` - List tasks
-- `POST /api/tasks` - Create task
-- `GET /api/kanban/{project_id}` - Kanban board data
-- `GET /api/gantt/{project_id}` - Gantt chart data
-- `POST /api/ai/predict` - AI delay prediction
-- `POST /api/simulation/{project_id}` - Monte Carlo simulation
-
-### Testing API Endpoints
+**Direct Database Access:**
 ```bash
-# Health check
-curl http://localhost:5000/api/health
-
-# Get projects
-curl http://localhost:5000/api/projects
-
-# Create project
-curl -X POST http://localhost:5000/api/projects \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Test Project", "description": "Test Description"}'
+# Connect to PostgreSQL
+psql postgresql://nitro_user:nitro_password@localhost:5432/nitro_planner
 ```
 
-## 🚀 Deployment
+## 📊 Performance Optimization
 
-### Railway Deployment
-1. Follow the [Railway Deployment Guide](../RAILWAY_DEPLOYMENT.md)
-2. Set up PostgreSQL database
-3. Configure environment variables
-4. Deploy backend and frontend services
+### Backend Optimization
 
-### Local Production Testing
+1. **Database Queries**: Use Prisma query optimization
+2. **Caching**: Implement Redis caching for frequently accessed data
+3. **Compression**: Enable gzip compression
+4. **Rate Limiting**: Implement API rate limiting
+
+### Frontend Optimization
+
+1. **Code Splitting**: Use Next.js dynamic imports
+2. **Image Optimization**: Use Next.js Image component
+3. **Bundle Analysis**: Use `@next/bundle-analyzer`
+4. **Caching**: Implement service workers
+
+## 🔒 Security Best Practices
+
+### Backend Security
+
+1. **Input Validation**: Use Joi or express-validator
+2. **Authentication**: JWT with proper expiration
+3. **Authorization**: Role-based access control
+4. **CORS**: Configure allowed origins
+5. **Helmet**: Security headers middleware
+
+### Frontend Security
+
+1. **XSS Prevention**: Use React's built-in protection
+2. **CSRF Protection**: Implement CSRF tokens
+3. **Environment Variables**: Only expose public variables
+4. **Content Security Policy**: Configure CSP headers
+
+## 🚀 Deployment Preparation
+
+### Production Build
+
 ```bash
-# Backend
-cd backend
-gunicorn --bind 0.0.0.0:5000 app:app
-
-# Frontend
-cd frontend
+# Build both applications
 npm run build
-npm start
+
+# Test production builds
+npm run start:backend
+npm run start:frontend
 ```
 
-## 🐛 Troubleshooting
+### Environment Variables
+
+Create production-specific environment files:
+- `.env.production`
+- `.env.staging`
+
+### Docker Production
+
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml build
+
+# Run production stack
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 🆘 Troubleshooting
 
 ### Common Issues
 
-#### Backend Won't Start
+**Port Already in Use:**
 ```bash
-# Check Python version
-python --version
+# Find process using port
+netstat -ano | findstr :5000
+# Kill process
+taskkill /PID <process_id> /F
+```
 
-# Check virtual environment
-which python  # Should point to venv
-
-# Check dependencies
-pip list
-
+**Database Connection Issues:**
+```bash
+# Check if PostgreSQL is running
+docker-compose ps postgres
 # Check logs
-python app.py
+docker-compose logs postgres
 ```
 
-#### Frontend Won't Start
+**Node Modules Issues:**
 ```bash
-# Check Node.js version
-node --version
-
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
+# Clean and reinstall
+npm run clean
+npm run install:all
 ```
 
-#### Database Issues
+**Docker Issues:**
 ```bash
-# Check database file
-ls -la backend/nitro_planner.db
-
-# Reset database
-rm backend/nitro_planner.db
-python backend/seed_data.py
+# Reset Docker environment
+docker-compose down -v
+docker system prune -a
+docker-compose up -d --build
 ```
 
-#### CORS Issues
-```bash
-# Check CORS configuration in backend/app.py
-# Ensure CORS_ORIGIN matches frontend URL
+### Getting Help
 
-# Test CORS
-curl -H "Origin: http://localhost:3000" \
-  -H "Access-Control-Request-Method: GET" \
-  -H "Access-Control-Request-Headers: X-Requested-With" \
-  -X OPTIONS http://localhost:5000/api/health
-```
+1. Check the logs: `npm run docker:logs`
+2. Verify environment variables
+3. Check database connectivity
+4. Review the [README.md](../README.md)
+5. Open an issue on GitHub
 
-#### WebSocket Issues
-```bash
-# Check WebSocket connection in browser console
-# Ensure CORS settings include WebSocket support
+## 📚 Additional Resources
 
-# Test WebSocket
-# Use browser developer tools to check WebSocket connection
-```
-
-### Performance Optimization
-
-#### Backend Optimization
-```bash
-# Use production server
-gunicorn --bind 0.0.0.0:5000 --workers 4 app:app
-
-# Enable caching
-# Add Redis configuration
-
-# Database optimization
-# Add database indexes
-# Use connection pooling
-```
-
-#### Frontend Optimization
-```bash
-# Build optimization
-npm run build
-
-# Bundle analysis
-npm install --save-dev @next/bundle-analyzer
-ANALYZE=true npm run build
-
-# Image optimization
-# Use Next.js Image component
-# Optimize images with WebP format
-```
-
-## 📚 Resources
-
-### Documentation
-- [Flask Documentation](https://flask.palletsprojects.com/)
 - [Next.js Documentation](https://nextjs.org/docs)
-- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-
-### Tools
-- [Postman](https://www.postman.com/) - API testing
-- [Insomnia](https://insomnia.rest/) - API testing
-- [DBeaver](https://dbeaver.io/) - Database management
-- [VS Code](https://code.visualstudio.com/) - Code editor
-
-### Extensions
-- Python (Microsoft)
-- ESLint
-- Prettier
-- Tailwind CSS IntelliSense
-- Docker
-- GitLens
-
-## 🤝 Contributing
-
-### Development Workflow
-1. Create a feature branch
-2. Make your changes
-3. Add tests
-4. Run linting and tests
-5. Submit a pull request
-
-### Code Standards
-- Follow PEP 8 for Python code
-- Use TypeScript for frontend code
-- Write meaningful commit messages
-- Add documentation for new features
-- Include tests for new functionality
-
-### Git Workflow
-```bash
-# Create feature branch
-git checkout -b feature/new-feature
-
-# Make changes
-git add .
-git commit -m "feat: add new feature"
-
-# Push to remote
-git push origin feature/new-feature
-
-# Create pull request
-# Merge after review
-```
-
-## 🎯 Next Steps
-
-### Immediate Improvements
-- [ ] Add comprehensive test coverage
-- [ ] Implement user authentication
-- [ ] Add file upload functionality
-- [ ] Enhance AI predictions
-- [ ] Add real-time notifications
-
-### Long-term Goals
-- [ ] Mobile app development
-- [ ] Advanced AI model training
-- [ ] Multi-language support
-- [ ] Integration with ERP systems
-- [ ] Advanced workflow automation
-
----
-
-**Happy coding! 🚀** 
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Docker Documentation](https://docs.docker.com/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Jest Testing Framework](https://jestjs.io/docs/getting-started) 

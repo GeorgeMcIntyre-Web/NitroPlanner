@@ -30,8 +30,8 @@ async function main() {
   // Create sample company (use create, not upsert, since we delete all companies above)
   const company = await prisma.company.create({
     data: {
-      name: 'Automotive Solutions Inc.',
-      industry: 'automotive',
+      name: 'Tech Solutions Inc.',
+      industry: 'technology',
       companySize: 'medium',
       subscriptionTier: 'pro',
       settings: {
@@ -48,10 +48,10 @@ async function main() {
   // Upsert sample users
   const users = await Promise.all([
     prisma.user.upsert({
-      where: { email: 'admin@autosolutions.com' },
+      where: { email: 'admin@techsolutions.com' },
       update: {},
       create: {
-        email: 'admin@autosolutions.com',
+        email: 'admin@techsolutions.com',
         username: 'admin',
         passwordHash: await hashPassword('password123'),
         firstName: 'John',
@@ -62,10 +62,10 @@ async function main() {
       }
     }),
     prisma.user.upsert({
-      where: { email: 'designer@autosolutions.com' },
+      where: { email: 'designer@techsolutions.com' },
       update: {},
       create: {
-        email: 'designer@autosolutions.com',
+        email: 'designer@techsolutions.com',
         username: 'designer',
         passwordHash: await hashPassword('password123'),
         firstName: 'Sarah',
@@ -76,10 +76,10 @@ async function main() {
       }
     }),
     prisma.user.upsert({
-      where: { email: 'engineer@autosolutions.com' },
+      where: { email: 'engineer@techsolutions.com' },
       update: {},
       create: {
-        email: 'engineer@autosolutions.com',
+        email: 'engineer@techsolutions.com',
         username: 'engineer',
         passwordHash: await hashPassword('password123'),
         firstName: 'Mike',
@@ -97,8 +97,8 @@ async function main() {
   const projects = await Promise.all([
     prisma.project.create({
       data: {
-        name: 'Electric Vehicle Assembly Line',
-        description: 'Design and implementation of automated assembly line for electric vehicles',
+        name: 'Product Development Platform',
+        description: 'Design and implementation of automated development platform for new products',
         status: 'active',
         startDate: new Date('2024-01-15'),
         endDate: new Date('2024-12-31'),
@@ -111,8 +111,8 @@ async function main() {
     }),
     prisma.project.create({
       data: {
-        name: 'Battery Pack Manufacturing System',
-        description: 'Automated manufacturing system for battery pack assembly',
+        name: 'Manufacturing System Upgrade',
+        description: 'Automated manufacturing system for improved production efficiency',
         status: 'active',
         startDate: new Date('2024-03-01'),
         endDate: new Date('2024-11-30'),
@@ -145,8 +145,8 @@ async function main() {
   const workUnits = await Promise.all([
     prisma.workUnit.create({
       data: {
-        name: 'Assembly Line Design',
-        description: 'Design the main assembly line layout and workflow',
+        name: 'System Design',
+        description: 'Design the main system layout and workflow',
         workUnitType: 'design',
         roleType: 'mechanical_designer',
         status: 'in_progress',
@@ -164,7 +164,7 @@ async function main() {
     prisma.workUnit.create({
       data: {
         name: 'Simulation Analysis',
-        description: 'Run simulation analysis for assembly line performance',
+        description: 'Run simulation analysis for system performance',
         workUnitType: 'simulation',
         roleType: 'simulation_engineer',
         status: 'pending',
@@ -182,7 +182,7 @@ async function main() {
     prisma.workUnit.create({
       data: {
         name: 'Manufacturing Process Design',
-        description: 'Design manufacturing processes for battery pack assembly',
+        description: 'Design manufacturing processes for improved production',
         workUnitType: 'manufacturing',
         roleType: 'manufacturing_engineer',
         status: 'in_progress',
@@ -206,7 +206,7 @@ async function main() {
     prisma.task.create({
       data: {
         name: 'Create 3D CAD Models',
-        description: 'Create detailed 3D CAD models for assembly line components',
+        description: 'Create detailed 3D CAD models for system components',
         status: 'in_progress',
         priority: 'high',
         dueDate: new Date('2024-04-10'),
@@ -225,7 +225,7 @@ async function main() {
     prisma.task.create({
       data: {
         name: 'Review Design Specifications',
-        description: 'Review and approve design specifications for assembly line',
+        description: 'Review and approve design specifications for system',
         status: 'review',
         priority: 'medium',
         dueDate: new Date('2024-04-15'),
@@ -451,7 +451,7 @@ async function main() {
       data: {
         name: 'Fides',
         version: '2023',
-        description: 'Fides - Specialized automotive design software',
+        description: 'Fides - Specialized design software',
         isActive: true,
         apiEndpoint: 'https://fides-api.company.com',
         settings: {
@@ -500,16 +500,15 @@ async function main() {
     }),
     prisma.cADExtractionTemplate.create({
       data: {
-        name: 'Fides Automotive BOM',
-        description: 'Specialized BOM extraction for automotive components',
+        name: 'Fides Standard BOM',
+        description: 'Standard BOM extraction for general components',
         templateType: 'bom',
         isActive: true,
         templateConfig: {
           includeProperties: ['PartNumber', 'Material', 'Mass', 'Volume', 'Manufacturer'],
           excludeComponents: ['Standard Parts', 'Fasteners', 'Hardware'],
           hierarchyLevels: 4,
-          includeMetadata: true,
-          automotiveSpecific: true
+          includeMetadata: true
         },
         cadSoftwareId: cadSoftware[2].id
       }
@@ -522,8 +521,8 @@ async function main() {
   const boms = await Promise.all([
     prisma.billOfMaterials.create({
       data: {
-        name: 'Electric Vehicle Assembly Line BOM',
-        description: 'Complete bill of materials for EV assembly line',
+        name: 'Product Development Platform BOM',
+        description: 'Complete bill of materials for product development platform',
         bomType: 'assembly',
         version: '1.0',
         status: 'draft',
@@ -542,8 +541,8 @@ async function main() {
     }),
     prisma.billOfMaterials.create({
       data: {
-        name: 'Battery Pack Assembly BOM',
-        description: 'Bill of materials for battery pack manufacturing',
+        name: 'Manufacturing System Upgrade BOM',
+        description: 'Bill of materials for manufacturing system upgrade',
         bomType: 'assembly',
         version: '1.0',
         status: 'review',
@@ -568,9 +567,9 @@ async function main() {
   const bomComponents = await Promise.all([
     prisma.bOMComponent.create({
       data: {
-        partNumber: 'EV-AL-001',
-        name: 'Main Assembly Frame',
-        description: 'Primary structural frame for assembly line',
+        partNumber: 'PD-001',
+        name: 'Main System Frame',
+        description: 'Primary structural frame for product development platform',
         quantity: 1,
         unit: 'pcs',
         material: 'Steel A36',
@@ -588,7 +587,7 @@ async function main() {
     }),
     prisma.bOMComponent.create({
       data: {
-        partNumber: 'EV-AL-002',
+        partNumber: 'PD-002',
         name: 'Conveyor System',
         description: 'Automated conveyor system for part transport',
         quantity: 4,
@@ -608,9 +607,9 @@ async function main() {
     }),
     prisma.bOMComponent.create({
       data: {
-        partNumber: 'BP-ASM-001',
-        name: 'Battery Cell Array',
-        description: 'Main battery cell assembly',
+        partNumber: 'MSU-001',
+        name: 'Manufacturing Assembly Line',
+        description: 'Main assembly line for manufacturing system upgrade',
         quantity: 1,
         unit: 'pcs',
         material: 'Lithium-Ion',
@@ -634,8 +633,8 @@ async function main() {
   const manufacturingInstructions = await Promise.all([
     prisma.manufacturingInstruction.create({
       data: {
-        name: 'EV Assembly Line Installation',
-        description: 'Step-by-step instructions for installing the electric vehicle assembly line',
+        name: 'Product Development Platform Installation',
+        description: 'Step-by-step instructions for installing the product development platform',
         instructionType: 'assembly',
         difficulty: 'hard',
         estimatedTime: 480, // 8 hours
@@ -652,8 +651,8 @@ async function main() {
     }),
     prisma.manufacturingInstruction.create({
       data: {
-        name: 'Battery Pack Assembly Process',
-        description: 'Manufacturing instructions for battery pack assembly',
+        name: 'Manufacturing System Upgrade Process',
+        description: 'Manufacturing instructions for manufacturing system upgrade',
         instructionType: 'assembly',
         difficulty: 'expert',
         estimatedTime: 360, // 6 hours
@@ -737,9 +736,9 @@ async function main() {
   console.log(`- Manufacturing Steps: ${manufacturingSteps.length}`);
   
   console.log('\n🔑 Sample Login Credentials:');
-  console.log('Admin: admin@autosolutions.com / password123');
-  console.log('Designer: designer@autosolutions.com / password123');
-  console.log('Engineer: engineer@autosolutions.com / password123');
+  console.log('Admin: admin@techsolutions.com / password123');
+  console.log('Designer: designer@techsolutions.com / password123');
+  console.log('Engineer: engineer@techsolutions.com / password123');
 }
 
 main()

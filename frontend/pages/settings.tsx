@@ -190,6 +190,9 @@ export default function SettingsPage() {
             {activeTab === 'about' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-medium text-gray-900">About NitroPlanner</h3>
+                <p className="text-sm text-gray-600">
+                  The world's first AI-powered project management system for companies.
+                </p>
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-sm font-medium text-gray-900">Version</h4>
@@ -198,7 +201,7 @@ export default function SettingsPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-900">Description</h4>
                     <p className="text-sm text-gray-500">
-                      The world's first AI-powered automotive project management system for line builder companies.
+                      The world's first AI-powered project management system for companies.
                     </p>
                   </div>
                   <div>
