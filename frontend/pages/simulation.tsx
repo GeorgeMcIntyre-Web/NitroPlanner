@@ -9,7 +9,7 @@ import {
   ExclamationTriangleIcon,
   PlayIcon,
   DocumentChartBarIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
 } from '@heroicons/react/24/outline'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 
@@ -212,7 +212,7 @@ const SimulationResults = ({ results }: { results: SimulationResult }) => {
           className="bg-white p-4 rounded-lg shadow"
         >
           <div className="flex items-center">
-            <TrendingUpIcon className="h-8 w-8 text-red-500" />
+            <ArrowTrendingUpIcon className="h-8 w-8 text-red-500" />
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-500">95% Confidence</p>
               <p className="text-lg font-semibold text-gray-900">

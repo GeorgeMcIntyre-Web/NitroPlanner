@@ -238,7 +238,7 @@ router.get('/:workUnitId/smart-assignment', authenticateToken, async (req: Reque
         roleType: workUnit.roleType,
         project: workUnit.project.name
       },
-      recommendations: recommendations.sort((a, b) => b.score - a.score),
+      recommendations: recommendations.sort((a: any, b: any) => b.score - a.score),
       totalCandidates: availableUsers.length,
       viableCandidates: recommendations.length
     });

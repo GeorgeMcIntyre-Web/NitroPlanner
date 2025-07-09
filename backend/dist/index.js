@@ -11,6 +11,7 @@ const routes_1 = __importDefault(require("./routes"));
 const import_export_1 = __importDefault(require("./routes/import-export"));
 const analytics_1 = __importDefault(require("./routes/analytics"));
 const digital_twin_1 = __importDefault(require("./routes/digital-twin"));
+const { errorHandler } = require('./middleware/errorHandler.js');
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 app.use((0, cors_1.default)({
@@ -25,6 +26,7 @@ app.use('/api/digital-twin', digital_twin_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
+app.use(errorHandler);
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

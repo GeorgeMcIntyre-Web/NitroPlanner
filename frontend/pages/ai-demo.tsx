@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BrainIcon,
+  CpuChipIcon,
   ChartBarIcon,
   ClockIcon,
   ExclamationTriangleIcon,
@@ -15,18 +15,63 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
 
+// 1. Add types for demo steps and their data
+
+type RequirementsData = {
+  requirements: string[];
+  teamCapabilities: string[];
+  historicalData: string;
+};
+type AssignmentsData = {
+  assignments: { role: string; assigned: string; efficiency: string }[];
+  optimization: string;
+};
+type RisksData = {
+  risks: { type: string; probability: string; impact: string; mitigation: string }[];
+  overallRisk: string;
+};
+type PredictionData = {
+  prediction: { optimistic: string; mostLikely: string; pessimistic: string; confidence: string };
+  factors: string[];
+};
+type ImprovementsData = {
+  improvements: { area: string; improvement: string; efficiency: string }[];
+  totalEfficiency: string;
+};
+type LearningData = {
+  learning: string[];
+  accuracy: string;
+};
+
+type DemoStepData =
+  | RequirementsData
+  | AssignmentsData
+  | RisksData
+  | PredictionData
+  | ImprovementsData
+  | LearningData;
+
+interface DemoStep {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  duration: number;
+  data: DemoStepData;
+}
+
 // AI Planning Demo Component
 export default function AIPlanningDemo() {
-  const [currentStep, setCurrentStep] = useState(0)
+  // 2. Type the demoSteps array and currentStep
+  const [currentStep, setCurrentStep] = useState<number>(0)
   const [isRunning, setIsRunning] = useState(false)
   const [simulationData, setSimulationData] = useState<any>(null)
   const [predictions, setPredictions] = useState<any>(null)
 
-  const demoSteps = [
+  const demoSteps: DemoStep[] = [
     {
       title: 'Project Analysis',
       description: 'AI analyzes project requirements, team capabilities, and historical data',
-      icon: BrainIcon,
+      icon: CpuChipIcon,
       duration: 3000,
       data: {
         requirements: ['Assembly line design', 'Quality control system', 'Safety protocols'],
@@ -108,6 +153,26 @@ export default function AIPlanningDemo() {
     }
   ]
 
+  // 3. Add type guards for each step's data
+  function isRequirementsData(data: DemoStepData): data is RequirementsData {
+    return (data as RequirementsData).requirements !== undefined;
+  }
+  function isAssignmentsData(data: DemoStepData): data is AssignmentsData {
+    return (data as AssignmentsData).assignments !== undefined;
+  }
+  function isRisksData(data: DemoStepData): data is RisksData {
+    return (data as RisksData).risks !== undefined;
+  }
+  function isPredictionData(data: DemoStepData): data is PredictionData {
+    return (data as PredictionData).prediction !== undefined;
+  }
+  function isImprovementsData(data: DemoStepData): data is ImprovementsData {
+    return (data as ImprovementsData).improvements !== undefined;
+  }
+  function isLearningData(data: DemoStepData): data is LearningData {
+    return (data as LearningData).learning !== undefined;
+  }
+
   const startSimulation = () => {
     setIsRunning(true)
     setCurrentStep(0)
@@ -149,6 +214,8 @@ export default function AIPlanningDemo() {
     setSimulationData(null)
     setPredictions(null)
   }
+
+  const step = demoSteps[currentStep];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -213,14 +280,14 @@ export default function AIPlanningDemo() {
             <div className="flex items-start space-x-6">
               <div className="flex-shrink-0">
                 <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <demoSteps[currentStep].icon className="h-8 w-8 text-blue-600" />
+                  {React.createElement(step.icon, { className: "h-8 w-8 text-blue-600" })}
                 </div>
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  {demoSteps[currentStep].title}
+                  {step.title}
                 </h3>
-                <p className="text-gray-600 mb-6">{demoSteps[currentStep].description}</p>
+                <p className="text-gray-600 mb-6">{step.description}</p>
                 
                 {/* Step-specific data display */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -228,25 +295,33 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Requirements Analysis</h4>
-                        <ul className="space-y-2">
-                          {demoSteps[currentStep].data.requirements.map((req, index) => (
-                            <li key={index} className="flex items-center text-sm text-gray-600">
-                              <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
-                              {req}
-                            </li>
-                          ))}
-                        </ul>
+                        {isRequirementsData(step.data) ? (
+                          <ul className="space-y-2">
+                            {step.data.requirements.map((req, index) => (
+                              <li key={index} className="flex items-center text-sm text-gray-600">
+                                <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                                {req}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Team Capabilities</h4>
-                        <div className="space-y-3">
-                          {demoSteps[currentStep].data.teamCapabilities.map((cap, index) => (
-                            <div key={index} className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">{cap.split(':')[0]}</span>
-                              <span className="text-sm font-medium text-blue-600">{cap.split(':')[1]}</span>
-                            </div>
-                          ))}
-                        </div>
+                        {isRequirementsData(step.data) ? (
+                          <div className="space-y-3">
+                            {step.data.teamCapabilities.map((cap, index) => (
+                              <div key={index} className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">{cap.split(':')[0]}</span>
+                                <span className="text-sm font-medium text-blue-600">{cap.split(':')[1]}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -255,21 +330,29 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Resource Assignments</h4>
-                        <div className="space-y-3">
-                          {demoSteps[currentStep].data.assignments.map((assignment, index) => (
-                            <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                              <div>
-                                <div className="font-medium text-gray-900">{assignment.role}</div>
-                                <div className="text-sm text-gray-600">{assignment.assigned}</div>
+                        {isAssignmentsData(step.data) ? (
+                          <div className="space-y-3">
+                            {step.data.assignments.map((assignment, index) => (
+                              <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <div>
+                                  <div className="font-medium text-gray-900">{assignment.role}</div>
+                                  <div className="text-sm text-gray-600">{assignment.assigned}</div>
+                                </div>
+                                <span className="text-sm font-medium text-green-600">{assignment.efficiency}</span>
                               </div>
-                              <span className="text-sm font-medium text-green-600">{assignment.efficiency}</span>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div className="bg-green-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-green-900 mb-2">Optimization Result</h4>
-                        <p className="text-green-700">{demoSteps[currentStep].data.optimization}</p>
+                        {isAssignmentsData(step.data) ? (
+                          <p className="text-green-700">{step.data.optimization}</p>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -278,26 +361,34 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Risk Assessment</h4>
-                        <div className="space-y-3">
-                          {demoSteps[currentStep].data.risks.map((risk, index) => (
-                            <div key={index} className="border-l-4 border-yellow-400 pl-4">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <div className="font-medium text-gray-900">{risk.type}</div>
-                                  <div className="text-sm text-gray-600">Mitigation: {risk.mitigation}</div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-sm font-medium text-yellow-600">{risk.probability}</div>
-                                  <div className="text-xs text-gray-500">{risk.impact}</div>
+                        {isRisksData(step.data) ? (
+                          <div className="space-y-3">
+                            {step.data.risks.map((risk, index) => (
+                              <div key={index} className="border-l-4 border-yellow-400 pl-4">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="font-medium text-gray-900">{risk.type}</div>
+                                    <div className="text-sm text-gray-600">Mitigation: {risk.mitigation}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium text-yellow-600">{risk.probability}</div>
+                                    <div className="text-xs text-gray-500">{risk.impact}</div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-blue-900 mb-2">Overall Risk Level</h4>
-                        <p className="text-blue-700 text-lg font-medium">{demoSteps[currentStep].data.overallRisk}</p>
+                        {isRisksData(step.data) ? (
+                          <p className="text-blue-700 text-lg font-medium">{step.data.overallRisk}</p>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -306,35 +397,43 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Timeline Prediction</h4>
-                        <div className="space-y-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Optimistic</span>
-                            <span className="text-sm font-medium text-green-600">{demoSteps[currentStep].data.prediction.optimistic}</span>
+                        {isPredictionData(step.data) ? (
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Optimistic</span>
+                              <span className="text-sm font-medium text-green-600">{step.data.prediction.optimistic}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Most Likely</span>
+                              <span className="text-sm font-medium text-blue-600">{step.data.prediction.mostLikely}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Pessimistic</span>
+                              <span className="text-sm font-medium text-red-600">{step.data.prediction.pessimistic}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t">
+                              <span className="text-sm text-gray-600">Confidence</span>
+                              <span className="text-sm font-medium text-purple-600">{step.data.prediction.confidence}</span>
+                            </div>
                           </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Most Likely</span>
-                            <span className="text-sm font-medium text-blue-600">{demoSteps[currentStep].data.prediction.mostLikely}</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Pessimistic</span>
-                            <span className="text-sm font-medium text-red-600">{demoSteps[currentStep].data.prediction.pessimistic}</span>
-                          </div>
-                          <div className="flex justify-between items-center pt-2 border-t">
-                            <span className="text-sm text-gray-600">Confidence</span>
-                            <span className="text-sm font-medium text-purple-600">{demoSteps[currentStep].data.prediction.confidence}</span>
-                          </div>
-                        </div>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Key Factors</h4>
-                        <ul className="space-y-2">
-                          {demoSteps[currentStep].data.factors.map((factor, index) => (
-                            <li key={index} className="flex items-center text-sm text-gray-600">
-                              <ArrowTrendingUpIcon className="h-4 w-4 text-blue-500 mr-2" />
-                              {factor}
-                            </li>
-                          ))}
-                        </ul>
+                        {isPredictionData(step.data) ? (
+                          <ul className="space-y-2">
+                            {step.data.factors.map((factor, index) => (
+                              <li key={index} className="flex items-center text-sm text-gray-600">
+                                <ArrowTrendingUpIcon className="h-4 w-4 text-blue-500 mr-2" />
+                                {factor}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -343,19 +442,27 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Process Improvements</h4>
-                        <div className="space-y-3">
-                          {demoSteps[currentStep].data.improvements.map((improvement, index) => (
-                            <div key={index} className="p-3 bg-green-50 rounded-lg">
-                              <div className="font-medium text-gray-900">{improvement.area}</div>
-                              <div className="text-sm text-gray-600">{improvement.improvement}</div>
-                              <div className="text-sm font-medium text-green-600">{improvement.efficiency}</div>
-                            </div>
-                          ))}
-                        </div>
+                        {isImprovementsData(step.data) ? (
+                          <div className="space-y-3">
+                            {step.data.improvements.map((improvement, index) => (
+                              <div key={index} className="p-3 bg-green-50 rounded-lg">
+                                <div className="font-medium text-gray-900">{improvement.area}</div>
+                                <div className="text-sm text-gray-600">{improvement.improvement}</div>
+                                <div className="text-sm font-medium text-green-600">{improvement.efficiency}</div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div className="bg-green-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-green-900 mb-2">Total Efficiency Gain</h4>
-                        <p className="text-green-700 text-lg font-medium">{demoSteps[currentStep].data.totalEfficiency}</p>
+                        {isImprovementsData(step.data) ? (
+                          <p className="text-green-700 text-lg font-medium">{step.data.totalEfficiency}</p>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -364,18 +471,26 @@ export default function AIPlanningDemo() {
                     <>
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-3">Learning Outcomes</h4>
-                        <ul className="space-y-2">
-                          {demoSteps[currentStep].data.learning.map((outcome, index) => (
-                            <li key={index} className="flex items-center text-sm text-gray-600">
-                              <LightBulbIcon className="h-4 w-4 text-yellow-500 mr-2" />
-                              {outcome}
-                            </li>
-                          ))}
-                        </ul>
+                        {isLearningData(step.data) ? (
+                          <ul className="space-y-2">
+                            {step.data.learning.map((outcome, index) => (
+                              <li key={index} className="flex items-center text-sm text-gray-600">
+                                <LightBulbIcon className="h-4 w-4 text-yellow-500 mr-2" />
+                                {outcome}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                       <div className="bg-purple-50 p-4 rounded-lg">
                         <h4 className="font-semibold text-purple-900 mb-2">Accuracy Improvement</h4>
-                        <p className="text-purple-700 text-lg font-medium">{demoSteps[currentStep].data.accuracy}</p>
+                        {isLearningData(step.data) ? (
+                          <p className="text-purple-700 text-lg font-medium">{step.data.accuracy}</p>
+                        ) : (
+                          <div>Data unavailable</div>
+                        )}
                       </div>
                     </>
                   )}
@@ -420,7 +535,7 @@ export default function AIPlanningDemo() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Recommendations</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {predictions.recommendations.map((rec, index) => (
+                {predictions.recommendations.map((rec: string, index: number) => (
                   <div key={index} className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg">
                     <CheckCircleIcon className="h-5 w-5 text-green-500 mt-0.5" />
                     <span className="text-sm text-gray-700">{rec}</span>
@@ -436,7 +551,7 @@ export default function AIPlanningDemo() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">AI Planning Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-lg shadow">
-              <BrainIcon className="h-8 w-8 text-blue-600 mb-4" />
+                              <CpuChipIcon className="h-8 w-8 text-blue-600 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Intelligent Analysis</h3>
               <p className="text-gray-600">AI analyzes project requirements, team capabilities, and historical data to create optimal plans.</p>
             </div>

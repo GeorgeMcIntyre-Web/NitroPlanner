@@ -13,8 +13,8 @@ router.get('/project/:projectId', authenticateToken, async (req, res, next) => {
     // Verify project belongs to user's company
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
-        companyId: req.user.companyId
+        id: projectId as string,
+        companyId: (req as any).user.companyId
       }
     });
 
@@ -27,7 +27,7 @@ router.get('/project/:projectId', authenticateToken, async (req, res, next) => {
 
     // Get all work units with dependencies
     const workUnits = await prisma.workUnit.findMany({
-      where: { projectId },
+      where: { projectId: projectId as string },
       include: {
         assignedTo: {
           select: {
@@ -68,7 +68,7 @@ router.get('/project/:projectId', authenticateToken, async (req, res, next) => {
     // Calculate workflow metrics
     const workflowMetrics = calculateWorkflowMetrics(workUnits, dependencyGraph);
 
-    res.json({
+    return res.json({
       project: {
         id: project.id,
         name: project.name,
@@ -80,7 +80,7 @@ router.get('/project/:projectId', authenticateToken, async (req, res, next) => {
       metrics: workflowMetrics
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -93,8 +93,8 @@ router.post('/create-from-template/:projectId', authenticateToken, async (req, r
     // Verify project belongs to user's company
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
-        companyId: req.user.companyId
+        id: projectId as string,
+        companyId: (req as any).user.companyId
       }
     });
 
@@ -108,8 +108,8 @@ router.post('/create-from-template/:projectId', authenticateToken, async (req, r
     // Get process template
     const template = await prisma.processTemplate.findFirst({
       where: {
-        id: templateId,
-        companyId: req.user.companyId,
+        id: templateId as string,
+        companyId: (req as any).user.companyId,
         isActive: true
       }
     });
@@ -123,13 +123,13 @@ router.post('/create-from-template/:projectId', authenticateToken, async (req, r
 
     // Create work units from template
     const createdWorkUnits = await createWorkUnitsFromTemplate(
-      projectId,
+      projectId as string,
       template,
       customizations,
-      req.user.id
+      (req as any).user.id
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Workflow created successfully from template',
       workUnits: createdWorkUnits,
       template: {
@@ -139,7 +139,7 @@ router.post('/create-from-template/:projectId', authenticateToken, async (req, r
       }
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -152,9 +152,9 @@ router.put('/dependencies/:workUnitId', authenticateToken, async (req, res, next
     // Verify work unit belongs to user's company
     const workUnit = await prisma.workUnit.findFirst({
       where: {
-        id: workUnitId,
+        id: workUnitId as string,
         project: {
-          companyId: req.user.companyId
+          companyId: (req as any).user.companyId
         }
       }
     });
@@ -167,7 +167,7 @@ router.put('/dependencies/:workUnitId', authenticateToken, async (req, res, next
     }
 
     // Validate dependencies
-    const validDependencies = await validateDependencies(dependencies, req.user.companyId);
+    const validDependencies = await validateDependencies(dependencies, (req as any).user.companyId);
     if (!validDependencies.valid) {
       return res.status(400).json({
         error: 'Invalid dependencies',
@@ -177,7 +177,7 @@ router.put('/dependencies/:workUnitId', authenticateToken, async (req, res, next
 
     // Update work unit dependencies
     const updatedWorkUnit = await prisma.workUnit.update({
-      where: { id: workUnitId },
+      where: { id: workUnitId as string },
       data: {
         dependencies: dependencies,
         updatedAt: new Date()
@@ -193,12 +193,12 @@ router.put('/dependencies/:workUnitId', authenticateToken, async (req, res, next
       }
     });
 
-    res.json({
+    return res.json({
       message: 'Work unit dependencies updated successfully',
       workUnit: updatedWorkUnit
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -210,8 +210,8 @@ router.get('/analytics/:projectId', authenticateToken, async (req, res, next) =>
     // Verify project belongs to user's company
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
-        companyId: req.user.companyId
+        id: projectId as string,
+        companyId: (req as any).user.companyId
       }
     });
 
@@ -223,9 +223,9 @@ router.get('/analytics/:projectId', authenticateToken, async (req, res, next) =>
     }
 
     // Get workflow analytics
-    const analytics = await calculateWorkflowAnalytics(projectId);
+    const analytics = await calculateWorkflowAnalytics(projectId as string);
 
-    res.json({
+    return res.json({
       project: {
         id: project.id,
         name: project.name
@@ -233,7 +233,7 @@ router.get('/analytics/:projectId', authenticateToken, async (req, res, next) =>
       analytics
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -246,8 +246,8 @@ router.post('/simulate/:projectId', authenticateToken, async (req, res, next) =>
     // Verify project belongs to user's company
     const project = await prisma.project.findFirst({
       where: {
-        id: projectId,
-        companyId: req.user.companyId
+        id: projectId as string,
+        companyId: (req as any).user.companyId
       }
     });
 
@@ -259,41 +259,36 @@ router.post('/simulate/:projectId', authenticateToken, async (req, res, next) =>
     }
 
     // Run workflow simulation
-    const simulationResults = await runWorkflowSimulation(projectId, simulationParams);
+    const simulationResults = await runWorkflowSimulation(projectId as string, simulationParams);
 
-    res.json({
+    return res.json({
       message: 'Workflow simulation completed',
       simulation: simulationResults
     });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
 // Helper function to build dependency graph
-function buildDependencyGraph(workUnits) {
+function buildDependencyGraph(workUnits: any[]): any {
   const graph = {
-    nodes: workUnits.map(wu => ({
+    nodes: workUnits.map((wu: any) => ({
       id: wu.id,
       name: wu.name,
-      status: wu.status,
-      progress: wu.progress,
-      estimatedHours: wu.estimatedHours,
-      actualHours: wu.actualHours,
-      startDate: wu.startDate,
-      endDate: wu.endDate
+      estimatedHours: wu.estimatedHours || 0
     })),
-    edges: []
+    edges: [] as any[]
   };
 
-  workUnits.forEach(workUnit => {
-    if (workUnit.dependencies && Array.isArray(workUnit.dependencies)) {
-      workUnit.dependencies.forEach(depId => {
+  workUnits.forEach((wu: any) => {
+    if (wu.dependencies && Array.isArray(wu.dependencies)) {
+      wu.dependencies.forEach((depId: any) => {
         graph.edges.push({
           from: depId,
-          to: workUnit.id,
+          to: wu.id,
           type: 'finish_to_start'
-        });
+        } as any);
       });
     }
   });
@@ -302,87 +297,93 @@ function buildDependencyGraph(workUnits) {
 }
 
 // Helper function to calculate critical path
-function calculateCriticalPath(dependencyGraph) {
+function calculateCriticalPath(dependencyGraph: any): any {
   const nodes = dependencyGraph.nodes;
   const edges = dependencyGraph.edges;
-  
-  // Create adjacency list
-  const adjacencyList = {};
-  const inDegree = {};
-  
-  nodes.forEach(node => {
+
+  const adjacencyList: { [key: string]: string[] } = {};
+  const inDegree: { [key: string]: number } = {};
+
+  nodes.forEach((node: any) => {
     adjacencyList[node.id] = [];
     inDegree[node.id] = 0;
   });
-  
-  edges.forEach(edge => {
-    adjacencyList[edge.from].push(edge.to);
-    inDegree[edge.to]++;
+
+  edges.forEach((edge: any) => {
+    const fromKey = edge.from as string;
+    const toKey = edge.to as string;
+    if (adjacencyList[fromKey]) {
+      adjacencyList[fromKey].push(toKey);
+    }
+    if (inDegree[toKey] !== undefined) {
+      inDegree[toKey]++;
+    }
   });
-  
-  // Topological sort with longest path calculation
-  const queue = [];
-  const earliestStart = {};
-  const latestStart = {};
-  
-  nodes.forEach(node => {
+
+  const queue: string[] = [];
+  const earliestStart: { [key: string]: number } = {};
+  const latestStart: { [key: string]: number } = {};
+
+  nodes.forEach((node: any) => {
     earliestStart[node.id] = 0;
     if (inDegree[node.id] === 0) {
       queue.push(node.id);
     }
   });
-  
-  // Calculate earliest start times
+
   while (queue.length > 0) {
-    const current = queue.shift();
-    const node = nodes.find(n => n.id === current);
-    
-    adjacencyList[current].forEach(neighbor => {
-      const neighborNode = nodes.find(n => n.id === neighbor);
-      const duration = neighborNode.estimatedHours || 0;
+    const current = queue.shift() as string;
+    const node = nodes.find((n: any) => n.id === current);
+    if (!node) continue;
+    (adjacencyList[current] || []).forEach((neighbor: string) => {
+      const neighborNode = nodes.find((n: any) => n.id === neighbor);
+      const duration = neighborNode?.estimatedHours || 0;
       earliestStart[neighbor] = Math.max(
-        earliestStart[neighbor],
+        earliestStart[neighbor] ?? 0,
         earliestStart[current] + duration
       );
-      inDegree[neighbor]--;
+      if (inDegree[neighbor] !== undefined) {
+        inDegree[neighbor]--;
+      }
       if (inDegree[neighbor] === 0) {
         queue.push(neighbor);
       }
     });
   }
-  
-  // Calculate latest start times
+
   const maxDuration = Math.max(...Object.values(earliestStart));
-  nodes.forEach(node => {
+  nodes.forEach((node: any) => {
     latestStart[node.id] = maxDuration;
   });
-  
-  // Find critical path
-  const criticalPath = [];
-  const criticalNodes = new Set();
-  
-  nodes.forEach(node => {
+
+  const criticalPath: string[] = [];
+  const criticalNodes = new Set<string>();
+
+  nodes.forEach((node: any) => {
     if (earliestStart[node.id] === latestStart[node.id]) {
       criticalNodes.add(node.id);
-      criticalPath.push({
-        id: node.id,
-        name: node.name,
-        duration: node.estimatedHours || 0,
-        earliestStart: earliestStart[node.id],
-        latestStart: latestStart[node.id]
-      });
     }
   });
-  
+
+  // Build the critical path sequence
+  let currentNode = nodes.find((node: any) => inDegree[node.id] === 0 && criticalNodes.has(node.id));
+  while (currentNode) {
+    criticalPath.push(currentNode.id);
+    const next = (adjacencyList[currentNode.id] || []).find(
+      (neighbor: string) => criticalNodes.has(neighbor)
+    );
+    if (!next) break;
+    currentNode = nodes.find((node: any) => node.id === next);
+  }
+
   return {
-    path: criticalPath,
-    totalDuration: maxDuration,
-    criticalNodes: Array.from(criticalNodes)
+    criticalPath,
+    duration: maxDuration
   };
 }
 
 // Helper function to calculate workflow metrics
-function calculateWorkflowMetrics(workUnits, dependencyGraph) {
+function calculateWorkflowMetrics(workUnits: any[], dependencyGraph: any) {
   const totalWorkUnits = workUnits.length;
   const completedWorkUnits = workUnits.filter(wu => wu.status === 'completed').length;
   const inProgressWorkUnits = workUnits.filter(wu => wu.status === 'in_progress').length;
@@ -392,7 +393,7 @@ function calculateWorkflowMetrics(workUnits, dependencyGraph) {
   const totalActualHours = workUnits.reduce((sum, wu) => sum + (wu.actualHours || 0), 0);
   
   const avgProgress = workUnits.length > 0 
-    ? workUnits.reduce((sum, wu) => sum + wu.progress, 0) / workUnits.length 
+    ? workUnits.reduce((sum, wu) => sum + (wu.progress || 0), 0) / workUnits.length 
     : 0;
   
   const dependencyCount = dependencyGraph.edges.length;
@@ -403,10 +404,8 @@ function calculateWorkflowMetrics(workUnits, dependencyGraph) {
     completedWorkUnits,
     inProgressWorkUnits,
     pendingWorkUnits,
-    completionRate: totalWorkUnits > 0 ? (completedWorkUnits / totalWorkUnits) * 100 : 0,
     totalEstimatedHours,
     totalActualHours,
-    efficiency: totalEstimatedHours > 0 ? (totalEstimatedHours / totalActualHours) * 100 : 0,
     avgProgress,
     dependencyCount,
     avgDependenciesPerWorkUnit
@@ -414,57 +413,48 @@ function calculateWorkflowMetrics(workUnits, dependencyGraph) {
 }
 
 // Helper function to create work units from template
-async function createWorkUnitsFromTemplate(projectId, template, customizations, createdById) {
-  const templateData = template.templateData;
-  const workUnits = [];
-  
-  if (templateData.workUnits && Array.isArray(templateData.workUnits)) {
-    for (const workUnitTemplate of templateData.workUnits) {
-      const workUnit = await prisma.workUnit.create({
-        data: {
-          projectId,
-          name: workUnitTemplate.name,
-          description: workUnitTemplate.description,
-          workUnitType: workUnitTemplate.workUnitType || template.workUnitType,
-          roleType: workUnitTemplate.roleType || template.roleType,
-          priority: workUnitTemplate.priority || 'medium',
-          estimatedHours: workUnitTemplate.estimatedHours,
-          dependencies: workUnitTemplate.dependencies || [],
-          createdById
-        }
-      });
-      
-      // Create checkpoints if defined in template
-      if (workUnitTemplate.checkpoints && Array.isArray(workUnitTemplate.checkpoints)) {
-        for (const checkpointTemplate of workUnitTemplate.checkpoints) {
-          await prisma.checkpoint.create({
-            data: {
-              workUnitId: workUnit.id,
-              name: checkpointTemplate.name,
-              description: checkpointTemplate.description,
-              checkpointType: checkpointTemplate.type,
-              requiredRole: checkpointTemplate.requiredRole,
-              status: 'pending'
-            }
-          });
-        }
+async function createWorkUnitsFromTemplate(projectId: string, template: any, customizations: any, createdById: string) {
+  const workUnits = template.workUnits || [];
+  const createdWorkUnits = [];
+
+  for (const templateWorkUnit of workUnits) {
+    const workUnitData = {
+      name: templateWorkUnit.name,
+      description: templateWorkUnit.description,
+      workUnitType: templateWorkUnit.workUnitType || template.workUnitType,
+      roleType: templateWorkUnit.roleType || template.roleType,
+      estimatedHours: templateWorkUnit.estimatedHours,
+      status: 'pending',
+      priority: templateWorkUnit.priority || 'medium',
+      projectId,
+      createdById,
+      dependencies: templateWorkUnit.dependencies || [],
+      checkpoints: {
+        create: templateWorkUnit.checkpoints?.map((cp: any) => ({
+          name: cp.name,
+          description: cp.description,
+          checkpointType: cp.checkpointType || 'quality_gate',
+          status: 'pending'
+        })) || []
       }
-      
-      workUnits.push(workUnit);
-    }
+    };
+
+    const createdWorkUnit = await prisma.workUnit.create({
+      data: workUnitData,
+      include: {
+        checkpoints: true
+      }
+    });
+
+    createdWorkUnits.push(createdWorkUnit);
   }
-  
-  return workUnits;
+
+  return createdWorkUnits;
 }
 
 // Helper function to validate dependencies
-async function validateDependencies(dependencies, companyId) {
-  const errors = [];
-  
-  if (!Array.isArray(dependencies)) {
-    errors.push('Dependencies must be an array');
-    return { valid: false, errors };
-  }
+async function validateDependencies(dependencies: string[], companyId: string) {
+  const errors: string[] = [];
   
   for (const depId of dependencies) {
     const workUnit = await prisma.workUnit.findFirst({
@@ -488,7 +478,7 @@ async function validateDependencies(dependencies, companyId) {
 }
 
 // Helper function to calculate workflow analytics
-async function calculateWorkflowAnalytics(projectId) {
+async function calculateWorkflowAnalytics(projectId: string) {
   const workUnits = await prisma.workUnit.findMany({
     where: { projectId },
     include: {
@@ -504,7 +494,7 @@ async function calculateWorkflowAnalytics(projectId) {
     }
   });
   
-  const analytics = {
+  const analytics: any = {
     timeline: {
       totalDuration: 0,
       avgDuration: 0,
@@ -534,38 +524,38 @@ async function calculateWorkflowAnalytics(projectId) {
   
   // Calculate timeline analytics
   const durations = workUnits
-    .filter(wu => wu.estimatedHours)
-    .map(wu => wu.estimatedHours);
+    .filter((wu: any) => wu.estimatedHours)
+    .map((wu: any) => wu.estimatedHours as number);
   
   if (durations.length > 0) {
-    analytics.timeline.totalDuration = durations.reduce((sum, d) => sum + d, 0);
+    analytics.timeline.totalDuration = durations.reduce((sum: number, d: number) => sum + d, 0);
     analytics.timeline.avgDuration = analytics.timeline.totalDuration / durations.length;
-    analytics.timeline.longestWorkUnit = workUnits.find(wu => wu.estimatedHours === Math.max(...durations));
-    analytics.timeline.shortestWorkUnit = workUnits.find(wu => wu.estimatedHours === Math.min(...durations));
+    analytics.timeline.longestWorkUnit = workUnits.find((wu: any) => wu.estimatedHours === Math.max(...durations)) || null;
+    analytics.timeline.shortestWorkUnit = workUnits.find((wu: any) => wu.estimatedHours === Math.min(...durations)) || null;
   }
   
   // Calculate quality analytics
-  const allCheckpoints = workUnits.flatMap(wu => wu.checkpoints);
+  const allCheckpoints = workUnits.flatMap((wu: any) => wu.checkpoints);
   analytics.quality.totalCheckpoints = allCheckpoints.length;
-  analytics.quality.passedCheckpoints = allCheckpoints.filter(cp => cp.status === 'passed').length;
-  analytics.quality.failedCheckpoints = allCheckpoints.filter(cp => cp.status === 'failed').length;
+  analytics.quality.passedCheckpoints = allCheckpoints.filter((cp: any) => cp.status === 'passed').length;
+  analytics.quality.failedCheckpoints = allCheckpoints.filter((cp: any) => cp.status === 'failed').length;
   analytics.quality.qualityScore = analytics.quality.totalCheckpoints > 0 
     ? (analytics.quality.passedCheckpoints / analytics.quality.totalCheckpoints) * 100 
     : 0;
   
   // Calculate efficiency analytics
-  analytics.efficiency.totalEstimatedHours = workUnits.reduce((sum, wu) => sum + (wu.estimatedHours || 0), 0);
-  analytics.efficiency.totalActualHours = workUnits.reduce((sum, wu) => sum + (wu.actualHours || 0), 0);
-  analytics.efficiency.efficiencyScore = analytics.efficiency.totalEstimatedHours > 0 
+  analytics.efficiency.totalEstimatedHours = workUnits.reduce((sum: number, wu: any) => sum + (wu.estimatedHours || 0), 0);
+  analytics.efficiency.totalActualHours = workUnits.reduce((sum: number, wu: any) => sum + (wu.actualHours || 0), 0);
+  analytics.efficiency.efficiencyScore = analytics.efficiency.totalActualHours > 0 
     ? (analytics.efficiency.totalEstimatedHours / analytics.efficiency.totalActualHours) * 100 
     : 0;
   
   // Calculate team analytics
-  const assignments = workUnits.filter(wu => wu.assignedTo);
+  const assignments = workUnits.filter((wu: any) => wu.assignedTo);
   analytics.team.totalAssignments = assignments.length;
   
-  const memberWorkloads = {};
-  assignments.forEach(wu => {
+  const memberWorkloads: Record<string, number> = {};
+  assignments.forEach((wu: any) => {
     const memberId = wu.assignedTo.id;
     memberWorkloads[memberId] = (memberWorkloads[memberId] || 0) + (wu.estimatedHours || 0);
   });
@@ -577,20 +567,20 @@ async function calculateWorkflowAnalytics(projectId) {
     const maxWorkload = Math.max(...workloads);
     const minWorkload = Math.min(...workloads);
     
-    analytics.team.busiestMember = assignments.find(wu => 
+    analytics.team.busiestMember = assignments.find((wu: any) => 
       wu.assignedTo && memberWorkloads[wu.assignedTo.id] === maxWorkload
-    )?.assignedTo;
+    )?.assignedTo || null;
     
-    analytics.team.leastBusyMember = assignments.find(wu => 
+    analytics.team.leastBusyMember = assignments.find((wu: any) => 
       wu.assignedTo && memberWorkloads[wu.assignedTo.id] === minWorkload
-    )?.assignedTo;
+    )?.assignedTo || null;
   }
   
   return analytics;
 }
 
 // Helper function to run workflow simulation
-async function runWorkflowSimulation(projectId, simulationParams) {
+async function runWorkflowSimulation(projectId: string, simulationParams: any) {
   const workUnits = await prisma.workUnit.findMany({
     where: { projectId },
     include: {
@@ -600,11 +590,11 @@ async function runWorkflowSimulation(projectId, simulationParams) {
   });
   
   const iterations = simulationParams?.iterations || 1000;
-  const results = {
+  const results: any = {
     iterations,
-    completionTimes: [],
-    riskAnalysis: {},
-    recommendations: []
+    completionTimes: [] as number[],
+    riskAnalysis: {} as any,
+    recommendations: [] as string[]
   };
   
   // Monte Carlo simulation
@@ -614,8 +604,8 @@ async function runWorkflowSimulation(projectId, simulationParams) {
   }
   
   // Calculate statistics
-  results.completionTimes.sort((a, b) => a - b);
-  const mean = results.completionTimes.reduce((sum, t) => sum + t, 0) / iterations;
+  results.completionTimes.sort((a: number, b: number) => a - b);
+  const mean = results.completionTimes.reduce((sum: number, t: number) => sum + t, 0) / iterations;
   const median = results.completionTimes[Math.floor(iterations / 2)];
   const p90 = results.completionTimes[Math.floor(iterations * 0.9)];
   const p95 = results.completionTimes[Math.floor(iterations * 0.95)];
@@ -631,11 +621,11 @@ async function runWorkflowSimulation(projectId, simulationParams) {
   
   // Risk analysis
   results.riskAnalysis = {
-    highRiskThreshold: p95,
-    mediumRiskThreshold: p90,
+    highRiskThreshold: p95 && p95 > (simulationParams?.targetDuration ?? 0) ? p95 : undefined,
+    mediumRiskThreshold: p90 && p90 > (simulationParams?.targetDuration ?? 0) ? p90 : undefined,
     lowRiskThreshold: median,
-    riskLevel: p95 > simulationParams?.targetDuration ? 'high' : 
-               p90 > simulationParams?.targetDuration ? 'medium' : 'low'
+    riskLevel: p95 && p95 > (simulationParams?.targetDuration ?? 0) ? 'high' : 
+               p90 && p90 > (simulationParams?.targetDuration ?? 0) ? 'medium' : 'low'
   };
   
   // Generate recommendations
@@ -649,13 +639,13 @@ async function runWorkflowSimulation(projectId, simulationParams) {
 }
 
 // Helper function to simulate workflow execution
-function simulateWorkflowExecution(workUnits, simulationParams) {
+function simulateWorkflowExecution(workUnits: any[], simulationParams: any): number {
   // Simplified simulation - in a real implementation, this would be much more sophisticated
-  const baseDurations = workUnits.map(wu => wu.estimatedHours || 0);
+  const baseDurations = workUnits.map((wu: any) => wu.estimatedHours || 0);
   const variability = simulationParams?.variability || 0.2;
   
   let totalDuration = 0;
-  baseDurations.forEach(duration => {
+  baseDurations.forEach((duration: number) => {
     // Add random variability
     const variation = (Math.random() - 0.5) * 2 * variability;
     const actualDuration = duration * (1 + variation);

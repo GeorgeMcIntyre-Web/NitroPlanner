@@ -78,7 +78,7 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
     const exportData = {
       exportDate: new Date().toISOString(),
       companyId: (req as any).user.companyId,
-      projects: projects.map(project => ({
+      projects: projects.map((project: any) => ({
         id: project.id,
         name: project.name,
         description: project.description,
@@ -87,7 +87,7 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
         endDate: project.endDate,
         progress: project.progress,
         budget: project.budget,
-        tasks: project.tasks.map(task => ({
+        tasks: project.tasks.map((task: any) => ({
           id: task.id,
           name: task.name,
           description: task.description,
@@ -104,7 +104,7 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
             email: task.assignedTo.email
           } : null
         })),
-        workUnits: project.workUnits.map(workUnit => ({
+        workUnits: project.workUnits.map((workUnit: any) => ({
           id: workUnit.id,
           name: workUnit.name,
           description: workUnit.description,
@@ -122,7 +122,7 @@ router.get('/export/projects', authenticateToken, async (req: Request, res: Resp
             name: `${workUnit.assignedTo.firstName} ${workUnit.assignedTo.lastName}`,
             email: workUnit.assignedTo.email
           } : null,
-          checkpoints: workUnit.checkpoints.map(checkpoint => ({
+          checkpoints: workUnit.checkpoints.map((checkpoint: any) => ({
             id: checkpoint.id,
             name: checkpoint.name,
             description: checkpoint.description,
@@ -185,7 +185,7 @@ router.get('/export/work-units', authenticateToken, async (req: Request, res: Re
     const exportData = {
       exportDate: new Date().toISOString(),
       companyId: (req as any).user.companyId,
-      workUnits: workUnits.map(workUnit => ({
+      workUnits: workUnits.map((workUnit: any) => ({
         id: workUnit.id,
         name: workUnit.name,
         description: workUnit.description,
@@ -212,7 +212,7 @@ router.get('/export/work-units', authenticateToken, async (req: Request, res: Re
           name: `${workUnit.assignedTo.firstName} ${workUnit.assignedTo.lastName}`,
           email: workUnit.assignedTo.email
         } : null,
-        checkpoints: workUnit.checkpoints.map(checkpoint => ({
+        checkpoints: workUnit.checkpoints.map((checkpoint: any) => ({
           id: checkpoint.id,
           name: checkpoint.name,
           description: checkpoint.description,
@@ -228,7 +228,7 @@ router.get('/export/work-units', authenticateToken, async (req: Request, res: Re
             email: checkpoint.assignedTo.email
           } : null
         })),
-        tasks: workUnit.tasks.map(task => ({
+        tasks: workUnit.tasks.map((task: any) => ({
           id: task.id,
           name: task.name,
           description: task.description,

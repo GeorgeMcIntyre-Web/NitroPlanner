@@ -21,17 +21,19 @@ const api = axios.create({
 
 // Types
 interface Project {
-  id: number
+  id: string
   name: string
   description: string
   status: string
-  start_date: string | null
-  end_date: string | null
-  budget: number
+  startDate: string | null
+  endDate: string | null
+  budget: number | null
   priority: string
   progress: number
-  predicted_completion: string | null
-  risk_level: string
+  predictedCompletion: string | null
+  riskLevel: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 // Project Card Component
@@ -102,14 +104,14 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }: any) => {
             <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
             <span className="text-gray-500">Start:</span>
             <span className="ml-1 font-medium">
-              {project.start_date ? new Date(project.start_date).toLocaleDateString() : 'Not set'}
+              {project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'}
             </span>
           </div>
           <div className="flex items-center">
             <CalendarIcon className="h-4 w-4 text-gray-400 mr-2" />
             <span className="text-gray-500">End:</span>
             <span className="ml-1 font-medium">
-              {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Not set'}
+              {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
             </span>
           </div>
           <div className="flex items-center">
@@ -131,13 +133,13 @@ const ProjectCard = ({ project, onEdit, onDelete, onView }: any) => {
               style={{ width: `${project.progress}%` }}
             />
           </div>
-          {project.risk_level && (
+          {project.riskLevel && (
             <div className={`text-xs px-2 py-1 rounded ${
-              project.risk_level === 'high' ? 'bg-red-100 text-red-800' :
-              project.risk_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+              project.riskLevel === 'high' ? 'bg-red-100 text-red-800' :
+              project.riskLevel === 'medium' ? 'bg-yellow-100 text-yellow-800' :
               'bg-green-100 text-green-800'
             }`}>
-              {project.risk_level} risk
+              {project.riskLevel} risk
             </div>
           )}
         </div>
@@ -154,8 +156,8 @@ const ProjectModal = ({ project, isOpen, onClose, onSave }: any) => {
     status: project?.status || 'active',
     priority: project?.priority || 'medium',
     budget: project?.budget || 0,
-    start_date: project?.start_date ? new Date(project.start_date).toISOString().split('T')[0] : '',
-    end_date: project?.end_date ? new Date(project.end_date).toISOString().split('T')[0] : '',
+    startDate: project?.startDate ? new Date(project.startDate).toISOString().split('T')[0] : '',
+    endDate: project?.endDate ? new Date(project.endDate).toISOString().split('T')[0] : '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -239,8 +241,8 @@ const ProjectModal = ({ project, isOpen, onClose, onSave }: any) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
               <input
                 type="date"
-                value={formData.start_date}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -249,8 +251,8 @@ const ProjectModal = ({ project, isOpen, onClose, onSave }: any) => {
               <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
               <input
                 type="date"
-                value={formData.end_date}
-                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -309,7 +311,7 @@ export default function ProjectsPage() {
 
   // Delete project mutation
   const deleteProjectMutation = useMutation(
-    (projectId: number) => api.delete(`/api/projects/${projectId}`),
+    (projectId: string) => api.delete(`/api/projects/${projectId}`),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('projects')
@@ -331,7 +333,7 @@ export default function ProjectsPage() {
     setIsModalOpen(true)
   }
 
-  const handleDeleteProject = (projectId: number) => {
+  const handleDeleteProject = (projectId: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
       deleteProjectMutation.mutate(projectId)
     }

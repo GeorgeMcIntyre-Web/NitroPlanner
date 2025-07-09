@@ -4,8 +4,8 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 import {
   ChartBarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   ClockIcon,
   UserGroupIcon,
   LightBulbIcon,
@@ -56,9 +56,9 @@ const AnalyticsCard = ({ title, value, subtitle, icon: Icon, color, trend }: any
         {trend && (
           <div className="flex items-center mt-2">
             {trend === 'up' ? (
-              <TrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
+              <ArrowTrendingUpIcon className="h-4 w-4 text-green-500 mr-1" />
             ) : (
-              <TrendingDownIcon className="h-4 w-4 text-red-500 mr-1" />
+              <ArrowTrendingDownIcon className="h-4 w-4 text-red-500 mr-1" />
             )}
             <span className={`text-xs ${
               trend === 'up' ? 'text-green-600' : 'text-red-600'
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
             title="Recent Efficiency"
             value={`${((analytics?.recent_efficiency || 1) * 100).toFixed(1)}%`}
             subtitle="Last 30 days"
-            icon={TrendingUpIcon}
+            icon={ArrowTrendingUpIcon}
             color="bg-green-500"
             trend={analytics?.improvement_trend === 'improving' ? 'up' : 'down'}
           />
@@ -232,7 +232,7 @@ export default function AnalyticsPage() {
             value={analytics?.improvement_trend === 'improving' ? 'Improving' : 
                    analytics?.improvement_trend === 'declining' ? 'Declining' : 'Stable'}
             subtitle="Based on recent performance"
-            icon={analytics?.improvement_trend === 'improving' ? TrendingUpIcon : TrendingDownIcon}
+            icon={analytics?.improvement_trend === 'improving' ? ArrowTrendingUpIcon : ArrowTrendingDownIcon}
             color={analytics?.improvement_trend === 'improving' ? 'bg-green-500' : 'bg-red-500'}
           />
         </div>

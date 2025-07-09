@@ -13,6 +13,8 @@ const analytics_1 = __importDefault(require("./analytics"));
 const templates_1 = __importDefault(require("./templates"));
 const import_export_1 = __importDefault(require("./import-export"));
 const digital_twin_1 = __importDefault(require("./digital-twin"));
+const workflow_engine_1 = __importDefault(require("./workflow-engine"));
+const equipment_1 = __importDefault(require("./equipment"));
 const router = express_1.default.Router();
 router.use('/auth', auth_1.default);
 router.use('/users', users_1.default);
@@ -23,5 +25,7 @@ router.use('/analytics', analytics_1.default);
 router.use('/templates', templates_1.default);
 router.use('/import-export', import_export_1.default);
 router.use('/digital-twin', digital_twin_1.default);
+router.use('/workflow-engine', workflow_engine_1.default);
+router.use('/equipment', equipment_1.default);
 exports.default = router;
 //# sourceMappingURL=index.js.map

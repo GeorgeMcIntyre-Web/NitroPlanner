@@ -28,6 +28,7 @@ model Company {
   processTemplates ProcessTemplate[]
   designTemplates  DesignTemplate[]
   cadSoftware      CADSoftware[]
+  equipment        Equipment[]
 
   @@map("companies")
 }
@@ -464,6 +465,9 @@ model WorkUnit {
 
   assignedToId String?
   assignedTo   User?   @relation("WorkUnitAssignee", fields: [assignedToId], references: [id])
+
+  assignedEquipmentId String?
+  assignedEquipment   Equipment? @relation("EquipmentWorkUnits", fields: [assignedEquipmentId], references: [id])
 
   createdById String
   createdBy   User   @relation("WorkUnitCreator", fields: [createdById], references: [id])
@@ -995,4 +999,253 @@ model AuditLog {
   @@index([action])
   @@index([resource])
   @@index([timestamp])
+}
+
+// ============================================================================
+// EQUIPMENT DIGITAL TWIN MODELS
+// ============================================================================
+
+// Equipment Profile - Core equipment information and specifications
+model Equipment {
+  id          String   @id @default(cuid())
+  name        String   // Equipment name (e.g., "Haas VF-2 CNC Mill")
+  model       String?  // Equipment model number
+  manufacturer String? // Equipment manufacturer
+  serialNumber String? // Equipment serial number
+  equipmentType String // cnc_mill, cnc_lathe, 3d_printer, laser_cutter, etc.
+  category    String   // manufacturing, testing, assembly, design, etc.
+  
+  // Specifications
+  specifications Json? // Technical specifications, capabilities, etc.
+  capabilities   Json? // What the equipment can do
+  materials      Json? // Supported materials
+  dimensions     Json? // Physical dimensions
+  powerRequirements Json? // Power requirements
+  
+  // Location and setup
+  location      String? // Physical location
+  department    String? // Department assignment
+  installationDate DateTime?
+  lastCalibration DateTime?
+  
+  // Status and lifecycle
+  status        String   @default("active") // active, inactive, maintenance, retired
+  lifecycleStage String  @default("operational") // new, operational, maintenance, end_of_life
+  purchaseDate  DateTime?
+  warrantyExpiry DateTime?
+  expectedLifespan Int? // in years
+  
+  // Cost information
+  purchaseCost  Float?
+  currency      String   @default("USD")
+  operatingCost Float? // Cost per hour of operation
+  maintenanceCost Float? // Annual maintenance cost
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Equipment Digital Twin components
+  equipmentStatus    EquipmentStatus?
+  equipmentCapacity  EquipmentCapacity?
+  equipmentMetrics   EquipmentMetrics?
+  maintenanceHistory MaintenanceRecord[]
+  operationHistory   OperationRecord[]
+  assignedWorkUnits  WorkUnit[] @relation("EquipmentWorkUnits")
+
+  @@map("equipment")
+}
+
+// Equipment Status - Real-time operational status
+model EquipmentStatus {
+  id              String   @id @default(cuid())
+  
+  // Current operational status
+  operationalStatus String  @default("idle") // idle, running, setup, maintenance, error, offline
+  currentJob       String? // Current job/work unit being processed
+  jobProgress      Float   @default(0) // 0-100% progress on current job
+  
+  // Real-time monitoring
+  temperature      Float? // Current temperature
+  vibration        Float? // Vibration levels
+  noise            Float? // Noise levels
+  powerConsumption Float? // Current power consumption
+  
+  // Error and alert status
+  errorCode        String? // Current error code if any
+  errorMessage     String? // Error description
+  alertLevel       String  @default("normal") // normal, warning, critical
+  
+  // Availability
+  isAvailable      Boolean @default(true)
+  availabilityReason String? // Reason for unavailability
+  
+  // Real-time tracking
+  lastUpdate       DateTime @default(now())
+  lastMaintenance  DateTime?
+  nextMaintenance  DateTime?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  equipmentId String @unique
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@map("equipment_status")
+}
+
+// Equipment Capacity - Capacity and availability management
+model EquipmentCapacity {
+  id                String   @id @default(cuid())
+  
+  // Capacity limits
+  maxOperatingHours Float    @default(24.0) // Maximum hours per day
+  maxWeeklyHours    Float    @default(168.0) // Maximum hours per week
+  maxConcurrentJobs Int      @default(1) // Maximum concurrent jobs
+  
+  // Current utilization
+  currentOperatingHours Float @default(0.0) // Current hours today
+  currentWeeklyHours    Float @default(0.0) // Current hours this week
+  currentJobs           Int   @default(0) // Current number of jobs
+  
+  // Utilization metrics
+  dailyUtilization    Float @default(0.0) // Percentage of daily capacity used
+  weeklyUtilization   Float @default(0.0) // Percentage of weekly capacity used
+  monthlyUtilization  Float @default(0.0) // Percentage of monthly capacity used
+  
+  // Scheduling
+  operatingSchedule   Json? // Operating hours and days
+  maintenanceSchedule Json? // Scheduled maintenance times
+  downtimeSchedule    Json? // Planned downtime
+  
+  // Capacity history
+  capacityHistory     Json? // Historical capacity data
+  utilizationTrends   Json? // Utilization trends over time
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  equipmentId String @unique
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@map("equipment_capacity")
+}
+
+// Equipment Metrics - Performance and quality metrics
+model EquipmentMetrics {
+  id                String   @id @default(cuid())
+  
+  // Performance metrics
+  uptime            Float   @default(0.0) // Percentage uptime
+  efficiency        Float   @default(0.0) // Overall efficiency score
+  throughput        Float   @default(0.0) // Units per hour
+  cycleTime         Float?  // Average cycle time in minutes
+  
+  // Quality metrics
+  qualityScore      Float   @default(0.0) // Output quality rating (1-10)
+  defectRate        Float   @default(0.0) // Defect rate percentage
+  accuracy          Float   @default(0.0) // Accuracy percentage
+  
+  // Reliability metrics
+  mttf              Float?  // Mean Time To Failure (hours)
+  mttr              Float?  // Mean Time To Repair (hours)
+  availability      Float   @default(0.0) // Overall availability percentage
+  
+  // Energy and cost metrics
+  energyEfficiency  Float   @default(0.0) // Energy efficiency score
+  costPerUnit       Float?  // Cost per unit produced
+  costPerHour       Float?  // Operating cost per hour
+  
+  // Historical data
+  performanceHistory Json?  // Historical performance data
+  qualityHistory     Json?  // Historical quality data
+  trends             Json?  // Performance trends
+  
+  lastCalculated     DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  equipmentId String @unique
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@map("equipment_metrics")
+}
+
+// Maintenance Records - Equipment maintenance history
+model MaintenanceRecord {
+  id              String   @id @default(cuid())
+  
+  // Maintenance details
+  maintenanceType String   // preventive, corrective, emergency, calibration
+  description     String
+  performedBy     String?  // Who performed the maintenance
+  cost            Float?
+  duration        Float?   // Duration in hours
+  
+  // Maintenance schedule
+  scheduledDate   DateTime?
+  performedDate   DateTime
+  nextScheduled   DateTime?
+  
+  // Maintenance results
+  status          String   @default("completed") // scheduled, in_progress, completed, cancelled
+  outcome         String?  // success, partial, failed
+  notes           String?
+  
+  // Parts and materials
+  partsUsed       Json?    // List of parts used
+  materialsUsed   Json?    // List of materials used
+  
+  // Quality checks
+  preMaintenanceChecks  Json? // Checks before maintenance
+  postMaintenanceChecks Json? // Checks after maintenance
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@map("maintenance_records")
+}
+
+// Operation Records - Equipment operation history
+model OperationRecord {
+  id              String   @id @default(cuid())
+  
+  // Operation details
+  operationType   String   // start, stop, pause, resume, error
+  jobId           String?  // Associated job/work unit
+  operatorId      String?  // Who operated the equipment
+  
+  // Operation metrics
+  startTime       DateTime
+  endTime         DateTime?
+  duration        Float?   // Duration in hours
+  unitsProduced   Int?     // Number of units produced
+  qualityScore    Float?   // Quality score for this operation
+  
+  // Operation parameters
+  parameters      Json?    // Operating parameters (speed, temperature, etc.)
+  settings        Json?    // Equipment settings used
+  
+  // Issues and notes
+  issues          String?
+  notes           String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  equipmentId String
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@map("operation_records")
 }

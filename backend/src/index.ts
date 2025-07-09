@@ -7,6 +7,8 @@ import importExportRouter from './routes/import-export';
 import analyticsRouter from './routes/analytics';
 import digitalTwinRouter from './routes/digital-twin';
 import { Request, Response } from 'express';
+// Use require for JS middleware import in TS
+const { errorHandler } = require('./middleware/errorHandler.js');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,6 +31,9 @@ app.use('/api/digital-twin', digitalTwinRouter);
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

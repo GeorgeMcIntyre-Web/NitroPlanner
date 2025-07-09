@@ -66,4 +66,40 @@ api.interceptors.response.use(
   }
 )
 
+// Equipment Digital Twin API
+export async function getEquipmentList(companyId?: string) {
+  const params = companyId ? { companyId } : undefined;
+  const res = await api.get('/api/equipment', { params });
+  return res.data;
+}
+
+export async function getEquipment(id: string) {
+  const res = await api.get(`/api/equipment/${id}`);
+  return res.data;
+}
+
+export async function createEquipment(data: any) {
+  const res = await api.post('/api/equipment', data);
+  return res.data;
+}
+
+export async function updateEquipment(id: string, data: any) {
+  const res = await api.put(`/api/equipment/${id}`, data);
+  return res.data;
+}
+
+export async function deleteEquipment(id: string) {
+  await api.delete(`/api/equipment/${id}`);
+}
+
+export async function assignEquipmentToWorkUnit(equipmentId: string, workUnitId: string) {
+  const res = await api.post(`/api/equipment/${equipmentId}/assign-workunit`, { workUnitId });
+  return res.data;
+}
+
+export async function unassignEquipmentFromWorkUnit(equipmentId: string, workUnitId: string) {
+  const res = await api.post(`/api/equipment/${equipmentId}/unassign-workunit`, { workUnitId });
+  return res.data;
+}
+
 export default api 

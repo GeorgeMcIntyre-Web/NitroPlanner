@@ -281,7 +281,6 @@ const WorkflowVisualizer: React.FC = () => {
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <Button
                     variant="secondary"
-                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEditDependencies(workUnit.id);

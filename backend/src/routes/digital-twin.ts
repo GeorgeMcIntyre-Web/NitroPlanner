@@ -667,7 +667,7 @@ router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res:
       maxCapacity: number;
     }[] = [];
 
-    overloadedMembers.forEach(member => {
+    overloadedMembers.forEach((member: any) => {
       const currentWorkload = (member as any).assignedWorkUnits.length + (member as any).assignedTasks.length;
       const maxCapacity = 5;
       const utilization = (currentWorkload / maxCapacity) * 100;
