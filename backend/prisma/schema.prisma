@@ -32,7 +32,7 @@ model Company {
   @@map("companies")
 }
 
-// User Management
+// User Management - Enhanced for Human Digital Twins
 model User {
   id             String    @id @default(cuid())
   username       String    @unique
@@ -52,6 +52,25 @@ model User {
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
   backupCodes     Json? // Array of backup codes
+
+  // Human Digital Twin - Professional Profile
+  professionalProfile ProfessionalProfile?
+  
+  // Human Digital Twin - Skills & Knowledge
+  skills            Skill[]
+  certifications    Certification[]
+  experienceHistory ExperienceEntry[]
+  
+  // Human Digital Twin - Capacity & Availability
+  availability      Availability?
+  workloadCapacity  WorkloadCapacity?
+  
+  // Human Digital Twin - Performance Metrics
+  performanceMetrics PerformanceMetrics?
+  
+  // Human Digital Twin - Learning & Development
+  learningPath      LearningPath?
+  trainingHistory   TrainingEntry[]
 
   // Company relation
   companyId String
@@ -75,6 +94,299 @@ model User {
   auditLogs            AuditLog[]
 
   @@map("users")
+}
+
+// Professional Profile - Core professional information
+model ProfessionalProfile {
+  id                String   @id @default(cuid())
+  title             String?  // Job title
+  level             String?  // junior, mid, senior, lead, principal, etc.
+  yearsOfExperience Int?     // Total years of experience
+  specialization    String?  // Primary area of specialization
+  bio               String?  // Professional bio
+  linkedinUrl       String?  // LinkedIn profile
+  portfolioUrl      String?  // Portfolio/website
+  
+  // Professional preferences
+  preferredWorkTypes Json?   // Types of work they prefer
+  workStyle          String? // collaborative, independent, hybrid
+  communicationStyle String? // direct, diplomatic, technical, etc.
+  
+  // Career goals
+  careerGoals       Json?    // Short and long-term goals
+  desiredGrowth     String?  // Areas they want to develop
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("professional_profiles")
+}
+
+// Skills - Technical and soft skills with proficiency levels
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   // Skill name
+  category    String   // technical, soft, domain, tool, language
+  proficiency String   // beginner, intermediate, advanced, expert
+  level       Int      // 1-10 scale
+  yearsUsed   Int?     // Years of experience with this skill
+  
+  // Skill validation
+  certified   Boolean  @default(false)
+  certifiedBy String?  // Certification body
+  certifiedAt DateTime?
+  
+  // Skill assessment
+  lastAssessed DateTime?
+  assessmentMethod String? // self, peer, manager, test, project
+  
+  // Skill usage tracking
+  lastUsed    DateTime?
+  usageCount  Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
+}
+
+// Certifications - Professional certifications and licenses
+model Certification {
+  id              String    @id @default(cuid())
+  name            String    // Certification name
+  issuer          String    // Issuing organization
+  credentialId    String?   // Certification ID
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  status          String    @default("active") // active, expired, suspended
+  
+  // Certification details
+  category        String?   // professional, technical, safety, etc.
+  level           String?   // basic, intermediate, advanced
+  description     String?
+  
+  // Verification
+  verified        Boolean   @default(false)
+  verifiedAt      DateTime?
+  verificationUrl String?   // URL to verify certification
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("certifications")
+}
+
+// Experience History - Professional experience tracking
+model ExperienceEntry {
+  id              String    @id @default(cuid())
+  title           String    // Job title
+  company         String    // Company name
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean   @default(false)
+  
+  // Experience details
+  description     String?
+  responsibilities Json?    // Key responsibilities
+  achievements    Json?     // Notable achievements
+  technologies    Json?     // Technologies used
+  projects        Json?     // Key projects worked on
+  
+  // Performance metrics
+  performanceRating Float?  // Performance rating if available
+  teamSize         Int?     // Size of team managed
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("experience_entries")
+}
+
+// Availability - Real-time availability tracking
+model Availability {
+  id              String   @id @default(cuid())
+  
+  // Work schedule
+  workSchedule    Json?    // Regular work schedule
+  timezone        String?  // Timezone
+  workingHours    Json?    // Daily working hours
+  
+  // Current availability
+  currentStatus   String   @default("available") // available, busy, away, offline
+  statusMessage   String?  // Custom status message
+  until           DateTime? // When status changes
+  
+  // Planned absences
+  plannedAbsences Json?    // Vacation, sick leave, etc.
+  
+  // Real-time tracking
+  lastActive      DateTime @default(now())
+  isOnline        Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("availability")
+}
+
+// Workload Capacity - Professional capacity and workload management
+model WorkloadCapacity {
+  id                String   @id @default(cuid())
+  
+  // Capacity limits
+  maxWeeklyHours    Float    @default(40.0)
+  maxConcurrentTasks Int     @default(5)
+  preferredWorkload  String  @default("medium") // light, medium, heavy
+  
+  // Current workload
+  currentWeeklyHours Float   @default(0.0)
+  currentTasks       Int     @default(0)
+  workloadUtilization Float  @default(0.0) // Percentage of capacity used
+  
+  // Capacity factors
+  stressLevel       String?  // low, medium, high
+  energyLevel       String?  // low, medium, high
+  focusLevel        String?  // low, medium, high
+  
+  // Capacity history
+  capacityHistory   Json?    // Historical capacity data
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("workload_capacity")
+}
+
+// Performance Metrics - Historical performance tracking
+model PerformanceMetrics {
+  id                String   @id @default(cuid())
+  
+  // Task performance
+  taskCompletionRate Float   @default(0.0) // Percentage of tasks completed on time
+  averageTaskTime    Float   @default(0.0) // Average time to complete tasks
+  qualityScore       Float   @default(0.0) // Quality rating (1-10)
+  
+  // Project performance
+  projectSuccessRate Float   @default(0.0) // Percentage of successful projects
+  averageProjectTime Float   @default(0.0) // Average project duration
+  clientSatisfaction Float   @default(0.0) // Client satisfaction score
+  
+  // Efficiency metrics
+  efficiencyScore    Float   @default(0.0) // Overall efficiency score
+  productivityIndex  Float   @default(0.0) // Productivity index
+  
+  // Collaboration metrics
+  collaborationScore Float   @default(0.0) // Team collaboration rating
+  communicationScore Float   @default(0.0) // Communication effectiveness
+  
+  // Learning metrics
+  skillImprovement   Float   @default(0.0) // Rate of skill improvement
+  knowledgeGrowth    Float   @default(0.0) // Knowledge growth rate
+  
+  // Historical data
+  performanceHistory Json?   // Historical performance data
+  trends             Json?   // Performance trends
+  
+  lastCalculated     DateTime @default(now())
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("performance_metrics")
+}
+
+// Learning Path - Professional development planning
+model LearningPath {
+  id                String   @id @default(cuid())
+  
+  // Learning goals
+  shortTermGoals    Json?    // 3-6 month goals
+  longTermGoals     Json?    // 1-3 year goals
+  careerObjectives  Json?    // Career development objectives
+  
+  // Learning preferences
+  learningStyle     String?  // visual, auditory, kinesthetic, reading
+  preferredFormat   String?  // online, in-person, hybrid, self-paced
+  timeCommitment    String?  // hours per week for learning
+  
+  // Current learning
+  currentCourses    Json?    // Currently enrolled courses
+  learningProgress  Json?    // Progress on learning goals
+  
+  // Learning recommendations
+  recommendedSkills Json?    // Skills recommended for development
+  recommendedCourses Json?   // Recommended courses/training
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_paths")
+}
+
+// Training History - Training and development tracking
+model TrainingEntry {
+  id              String    @id @default(cuid())
+  title           String    // Training title
+  provider        String    // Training provider
+  type            String    // course, workshop, certification, conference
+  startDate       DateTime?
+  endDate         DateTime?
+  duration        Float?    // Duration in hours
+  
+  // Training details
+  description     String?
+  objectives      Json?     // Learning objectives
+  outcomes        Json?     // Learning outcomes
+  skillsGained    Json?     // Skills gained from training
+  
+  // Assessment
+  grade           String?   // Grade/score if applicable
+  certificate     String?   // Certificate URL if applicable
+  status          String    @default("completed") // enrolled, in_progress, completed, dropped
+  
+  // Impact
+  impactOnWork    String?   // How training impacted work
+  application     Json?     // How skills were applied
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("training_entries")
 }
 
 // Project Management

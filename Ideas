@@ -9,7 +9,15 @@ algorithm.
 7. Azure login.
 8. Tracking all analitics to be able to predict the values in the future based on previous values.
 
-
+9. HUMAN DIGITAL TWIN SYSTEM - Advanced resource planning based on real-world human capabilities
+   - Professional profiles with experience, skills, and specializations
+   - Real-time capacity and availability tracking
+   - Skill-based work assignment recommendations
+   - Performance metrics and learning paths
+   - Workload optimization and burnout prevention
+   - Career development and training tracking
+   - AI-powered resource allocation based on actual capabilities
+   - Predictive capacity planning and risk mitigation
 
 Always Resilient 
 Fault-Tolerant

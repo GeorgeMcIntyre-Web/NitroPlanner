@@ -5,6 +5,7 @@ import cors from 'cors';
 import { usersRouter, projectsRouter, authRouter } from './routes';
 import importExportRouter from './routes/import-export';
 import analyticsRouter from './routes/analytics';
+import digitalTwinRouter from './routes/digital-twin';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +25,7 @@ app.use('/api/auth', authRouter);
 // New feature routes
 app.use('/api/import-export', importExportRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/digital-twin', digitalTwinRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
