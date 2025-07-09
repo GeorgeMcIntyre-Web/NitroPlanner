@@ -330,6 +330,68 @@ This guide defines all key terms and concepts used in NitroPlanner to ensure cle
 
 ---
 
+## 🔄 **Process Workflows**
+
+### **Process Workflow**
+**Definition**: The sequential order and dependencies in which Work Units must be executed to create a complete object or deliverable.
+
+**Key Characteristics**:
+- **Sequential Dependencies**: Work Units that must be completed before others can start
+- **Parallel Work Streams**: Work Units that can be executed simultaneously
+- **Quality Gates**: Checkpoints that ensure quality before proceeding
+- **Critical Path**: The longest sequence of dependent Work Units that determines project duration
+- **Process Templates**: Standardized workflows for common processes
+
+**Examples**:
+- **Design Process**: Requirements → Concept → Detailed Design → Simulation → Validation
+- **Manufacturing Process**: Material Prep → Machining → Assembly → Testing → Quality Check
+- **Software Development**: Planning → Design → Development → Testing → Deployment
+
+**Think of Process Workflows as**: The "recipe" that defines the exact order and steps to create something.
+
+---
+
+### **Dependency Types**
+- **Finish-to-Start**: Must complete before starting (most common)
+- **Start-to-Start**: Can start together
+- **Finish-to-Finish**: Must finish together
+- **Start-to-Finish**: Must start before finishing
+
+### **Critical Path Analysis**
+- **Critical Path**: Longest sequence of dependent activities
+- **Float/Slack**: Time an activity can be delayed without affecting project completion
+- **Critical Activities**: Activities with zero float that must be completed on time
+
+---
+
+## 🎯 **Workflow Engine Features**
+
+### **1. Visual Process Designer**
+- Drag-and-drop process creation
+- Visual dependency mapping
+- Process flow visualization
+- Real-time collaboration
+
+### **2. Dependency Management**
+- Automatic dependency validation
+- Circular dependency detection
+- Dependency impact analysis
+- Resource constraint checking
+
+### **3. Process Automation**
+- Automatic task creation from templates
+- Dependency enforcement and blocking
+- Process monitoring and alerts
+- Automated quality gate checks
+
+### **4. Process Analytics**
+- Process efficiency metrics
+- Bottleneck identification
+- Process optimization recommendations
+- Performance trend analysis
+
+---
+
 ## 📝 **Common Abbreviations**
 
 - **BOM**: Bill of Materials

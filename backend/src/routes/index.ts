@@ -8,6 +8,7 @@ import analyticsRoutes from './analytics';
 import templatesRoutes from './templates';
 import importExportRoutes from './import-export';
 import digitalTwinRoutes from './digital-twin';
+import workflowEngine from './workflow-engine';
 // import collaborationRoutes from './collaboration'; // Temporarily commented out due to TypeScript errors
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.use('/analytics', analyticsRoutes);
 router.use('/templates', templatesRoutes);
 router.use('/import-export', importExportRoutes);
 router.use('/digital-twin', digitalTwinRoutes);
+router.use('/workflow-engine', workflowEngine);
 // router.use('/collaboration', collaborationRoutes); // Temporarily commented out due to TypeScript errors
 
 export default router; 

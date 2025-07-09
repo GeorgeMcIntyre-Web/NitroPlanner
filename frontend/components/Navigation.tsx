@@ -72,6 +72,9 @@ const Navigation = () => {
               <Link href="/team-capacity" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                 Team Capacity
               </Link>
+              <Link href="/workflow-visualizer" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                Workflow
+              </Link>
             </div>
           </div>
 
