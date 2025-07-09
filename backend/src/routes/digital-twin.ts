@@ -506,6 +506,186 @@ router.get('/me/skill-recommendations', authenticateToken, async (req: Request, 
 });
 
 // ============================================================================
+// TEAM CAPACITY OVERVIEW (Practical for Project Managers)
+// ============================================================================
+
+// Get team capacity overview for project managers
+router.get('/team/capacity-overview', authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const companyId = (req as any).user.companyId;
+
+    // Get all active users in the company
+    const teamMembers = await prisma.user.findMany({
+      where: {
+        companyId,
+        isActive: true
+      },
+      include: {
+        assignedWorkUnits: {
+          where: {
+            status: { in: ['pending', 'in_progress'] }
+          }
+        },
+        assignedTasks: {
+          where: {
+            status: { in: ['pending', 'in_progress'] }
+          }
+        }
+      }
+    });
+
+    // Calculate capacity metrics for each team member
+    const teamCapacity = teamMembers.map(member => {
+      const currentWorkload = (member as any).assignedWorkUnits.length + (member as any).assignedTasks.length;
+      const maxCapacity = 5; // Default max concurrent tasks
+      const utilization = (currentWorkload / maxCapacity) * 100;
+      
+      let capacityStatus = 'available';
+      if (utilization >= 90) capacityStatus = 'overloaded';
+      else if (utilization >= 75) capacityStatus = 'busy';
+      else if (utilization >= 50) capacityStatus = 'moderate';
+      else capacityStatus = 'available';
+
+      return {
+        user: {
+          id: member.id,
+          firstName: member.firstName,
+          lastName: member.lastName,
+          role: member.role,
+          department: member.department
+        },
+        capacity: {
+          currentWorkload,
+          maxCapacity,
+          utilization: Math.round(utilization),
+          status: capacityStatus,
+          availableCapacity: Math.max(0, maxCapacity - currentWorkload)
+        },
+        currentWork: {
+          workUnits: (member as any).assignedWorkUnits.map((wu: any) => ({
+            id: wu.id,
+            name: wu.name,
+            status: wu.status,
+            priority: wu.priority
+          })),
+          tasks: (member as any).assignedTasks.map((task: any) => ({
+            id: task.id,
+            name: task.name,
+            status: task.status,
+            priority: task.priority
+          }))
+        }
+      };
+    });
+
+    // Calculate team-wide metrics
+    const totalMembers = teamMembers.length;
+    const availableMembers = teamCapacity.filter(member => member.capacity.status === 'available').length;
+    const busyMembers = teamCapacity.filter(member => member.capacity.status === 'busy').length;
+    const overloadedMembers = teamCapacity.filter(member => member.capacity.status === 'overloaded').length;
+
+    const totalCapacity = teamCapacity.reduce((sum, member) => sum + member.capacity.maxCapacity, 0);
+    const totalUtilization = teamCapacity.reduce((sum, member) => sum + member.capacity.currentWorkload, 0);
+    const overallUtilization = totalCapacity > 0 ? (totalUtilization / totalCapacity) * 100 : 0;
+
+    res.json({
+      message: 'Team capacity overview retrieved successfully',
+      teamMetrics: {
+        totalMembers,
+        availableMembers,
+        busyMembers,
+        overloadedMembers,
+        overallUtilization: Math.round(overallUtilization),
+        totalCapacity,
+        totalUtilization
+      },
+      teamCapacity: teamCapacity.sort((a, b) => b.capacity.utilization - a.capacity.utilization),
+      recommendations: generateTeamRecommendations(teamCapacity)
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get capacity alerts for project managers
+router.get('/team/capacity-alerts', authenticateToken, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const companyId = (req as any).user.companyId;
+
+    // Get overloaded team members
+    const overloadedMembers = await prisma.user.findMany({
+      where: {
+        companyId,
+        isActive: true
+      },
+      include: {
+        assignedWorkUnits: {
+          where: {
+            status: { in: ['pending', 'in_progress'] }
+          }
+        },
+        assignedTasks: {
+          where: {
+            status: { in: ['pending', 'in_progress'] }
+          }
+        }
+      }
+    });
+
+    const alerts = [];
+
+    overloadedMembers.forEach(member => {
+      const currentWorkload = (member as any).assignedWorkUnits.length + (member as any).assignedTasks.length;
+      const maxCapacity = 5;
+      const utilization = (currentWorkload / maxCapacity) * 100;
+
+      if (utilization >= 90) {
+        alerts.push({
+          type: 'overload',
+          severity: 'high',
+          user: {
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            role: member.role
+          },
+          message: `${member.firstName} ${member.lastName} is at ${Math.round(utilization)}% capacity`,
+          recommendation: 'Consider redistributing work or delaying new assignments',
+          currentWorkload,
+          maxCapacity
+        });
+      } else if (utilization >= 75) {
+        alerts.push({
+          type: 'high_utilization',
+          severity: 'medium',
+          user: {
+            id: member.id,
+            firstName: member.firstName,
+            lastName: member.lastName,
+            role: member.role
+          },
+          message: `${member.firstName} ${member.lastName} is at ${Math.round(utilization)}% capacity`,
+          recommendation: 'Monitor workload and plan assignments carefully',
+          currentWorkload,
+          maxCapacity
+        });
+      }
+    });
+
+    res.json({
+      message: 'Capacity alerts retrieved successfully',
+      alerts: alerts.sort((a, b) => {
+        const severityOrder = { high: 3, medium: 2, low: 1 };
+        return severityOrder[b.severity as keyof typeof severityOrder] - severityOrder[a.severity as keyof typeof severityOrder];
+      }),
+      totalAlerts: alerts.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -664,6 +844,48 @@ function generateSkillRecommendations(user: any) {
       ? Math.round(((currentSkills.length - missingSkills.length) / roleRequirements.length) * 100)
       : 0
   };
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR TEAM CAPACITY
+// ============================================================================
+
+function generateTeamRecommendations(teamCapacity: any[]) {
+  const recommendations = [];
+
+  const overloadedCount = teamCapacity.filter(member => member.capacity.status === 'overloaded').length;
+  const availableCount = teamCapacity.filter(member => member.capacity.status === 'available').length;
+
+  if (overloadedCount > 0) {
+    recommendations.push({
+      type: 'workload_redistribution',
+      priority: 'high',
+      message: `${overloadedCount} team member(s) are overloaded`,
+      action: 'Consider redistributing work to available team members'
+    });
+  }
+
+  if (availableCount > 2) {
+    recommendations.push({
+      type: 'capacity_optimization',
+      priority: 'medium',
+      message: `${availableCount} team member(s) have available capacity`,
+      action: 'Consider assigning new work units or tasks to optimize team utilization'
+    });
+  }
+
+  const avgUtilization = teamCapacity.reduce((sum, member) => sum + member.capacity.utilization, 0) / teamCapacity.length;
+  
+  if (avgUtilization < 50) {
+    recommendations.push({
+      type: 'underutilization',
+      priority: 'medium',
+      message: `Team utilization is ${Math.round(avgUtilization)}%`,
+      action: 'Consider increasing workload or reallocating resources'
+    });
+  }
+
+  return recommendations;
 }
 
 export default router; 
