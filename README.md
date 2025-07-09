@@ -2,6 +2,13 @@
 
 AI-powered project management system with digital twin capabilities.
 
+## 📚 **Documentation**
+
+- **[Terminology Guide](./docs/TERMINOLOGY_GUIDE.md)** - Complete guide to all terms and concepts
+- **[Development Guide](./docs/DEVELOPMENT.md)** - Development setup and best practices
+- **[Digital Twin Guide](./docs/DIGITAL_TWIN_GUIDE.md)** - Digital twin system documentation
+- **[Implementation Summary](./IMPLEMENTATION_SUMMARY.md)** - Feature implementation overview
+
 ## 🚀 Quick Start
 
 ### Prerequisites
