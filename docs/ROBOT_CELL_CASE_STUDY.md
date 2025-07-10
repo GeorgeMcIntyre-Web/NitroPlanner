@@ -55,43 +55,356 @@ ST065 Exit Conveyor
 
 ---
 
+## 👥 **Complete Team Structure for Design-to-2D Drawings**
+
+### **Mechanical Design Team**
+- **Lisa Rodriguez** - 3D Designer (Tooling & Fixtures)
+- **David Kim** - Gripper Designer
+- **Vince Van** - Industrial Engineer (Machine Operation/MO)
+- **Design Checker** - Quality assurance for mechanical designs
+
+### **Detailing Team**
+- **2D Drafter** - Creates 2D manufacturing drawings from 3D models
+- **BOM Specialist** - Creates and manages Bill of Materials
+- **Drawing Checker** - Reviews all drawings for manufacturability
+
+### **Electrical Design Team**
+- **Alex Thompson** - Electrical Designer (PLC Programming, Electrical Design, Electrical Drawings)
+
+### **Simulation Team**
+- **Robert Martinez** - Simulation Engineer
+
+**Total: 8 people** - Real, essential roles needed to get from design concept to manufacturing-ready 2D drawings.
+
+---
+
+## 🔄 **Complete Process Flows**
+
+### **📋 Overall Project Process Flow**
+```
+1. Project Initiation
+   ├── Create project in NitroPlanner
+   ├── System generates digital twins for all components
+   ├── Assign stakeholders based on digital twin analysis
+   └── Set up quality gates and milestones
+
+2. Design Phase
+   ├── First Stage Design (Core functionality)
+   ├── Second Stage Design (Complete details)
+   └── Design Validation & Review
+
+3. Detailing Phase
+   ├── 2D Drawing Creation
+   ├── BOM Generation
+   └── Drawing Review & Approval
+
+4. Simulation Phase
+   ├── Robot Simulation & Validation
+   ├── Interference Checking
+   └── Cycle Time Optimization
+
+5. Release to Manufacturing
+   ├── Final Quality Gates
+   ├── Drawing Release
+   └── Manufacturing Handoff
+```
+
+### **🔧 Mechanical Design Team Process Flow**
+```
+1. First Stage Design
+   ├── Lisa Rodriguez (Tooling & Fixtures)
+   │   ├── Design core fixture structure
+   │   ├── Design clamps and pins (functional)
+   │   ├── Design opening mechanism (functional)
+   │   └── Submit for first stage review
+   │
+   ├── David Kim (Gripper Designer)
+   │   ├── Design core gripper structure
+   │   ├── Design actuation mechanism (functional)
+   │   ├── Design part interface (functional)
+   │   └── Submit for first stage review
+   │
+   └── Vince Van (Industrial Engineer)
+       ├── Create Machine Operation (MO) sequence
+       ├── Define interlock matrix
+       └── Establish safety requirements
+
+2. First Stage Quality Gates
+   ├── Design Checker Review
+   ├── Basic Interference Validation
+   └── Functional Design Approval
+
+3. Second Stage Design
+   ├── Lisa Rodriguez
+   │   ├── Add all fasteners and mounting hardware
+   │   ├── Complete final details
+   │   └── Submit for final review
+   │
+   ├── David Kim
+   │   ├── Add all fasteners and mounting hardware
+   │   ├── Complete final details
+   │   └── Submit for final review
+   │
+   └── Vince Van
+       ├── Finalize MO sequence
+       ├── Complete interlock matrix
+       └── Validate safety systems
+
+4. Final Quality Gates
+   ├── Complete Design Review
+   ├── Final Interference Validation
+   └── Design Release to Detailing
+```
+
+### **📐 Detailing Team Process Flow**
+```
+1. 2D Drawing Creation
+   ├── 2D Drafter
+   │   ├── Receive 3D models from design team
+   │   ├── Create 2D manufacturing drawings
+   │   ├── Add dimensions and tolerances
+   │   ├── Include manufacturing notes
+   │   └── Submit for BOM creation
+   │
+   └── Drawing Checker (Parallel Review)
+       ├── Review drawing completeness
+       ├── Check manufacturability
+       ├── Verify standards compliance
+       └── Provide feedback
+
+2. BOM Generation & Long Lead Analysis
+   ├── BOM Specialist
+   │   ├── Extract components from 3D models
+   │   ├── Create Bill of Materials
+   │   ├── Add part numbers and descriptions
+   │   ├── Include quantities and materials
+   │   ├── Identify long lead items (12+ weeks)
+   │   ├── Flag critical components (8-12 weeks)
+   │   ├── Update project timeline with procurement constraints
+   │   └── Submit for final review
+
+3. Procurement Planning
+   ├── BOM Specialist
+   │   ├── Create procurement schedule
+   │   ├── Coordinate early ordering for long lead items
+   │   ├── Monitor supplier availability and lead times
+   │   ├── Update project timeline based on procurement status
+   │   └── Alert project team of any delays
+
+4. Final Drawing Review
+   ├── Drawing Checker
+   │   ├── Final drawing review
+   │   ├── BOM verification
+   │   ├── Standards compliance check
+   │   └── Manufacturing readiness validation
+
+5. Release to Manufacturing
+   ├── Quality gate approval
+   ├── Drawing release
+   ├── Procurement status confirmed
+   └── Manufacturing handoff
+```
+
+### **⚡ Electrical Design Team Process Flow**
+```
+1. First Stage Electrical Design
+   ├── Alex Thompson
+   │   ├── PLC programming structure
+   │   ├── Basic electrical panel layouts
+   │   ├── Safety system design
+   │   └── Submit for first stage review
+
+2. First Stage Quality Gates
+   ├── Functional electrical review
+   ├── Basic safety validation
+   └── Electrical design approval
+
+3. Second Stage Electrical Design
+   ├── Alex Thompson
+   │   ├── Complete PLC programming
+   │   ├── Final electrical panel design
+   │   ├── Complete safety systems
+   │   ├── Create electrical drawings
+   │   └── Submit for final review
+
+4. Final Quality Gates
+   ├── Complete electrical review
+   ├── Safety system validation
+   └── Electrical release to manufacturing
+```
+
+### **🤖 Simulation Team Process Flow**
+```
+1. First Stage Simulation
+   ├── Robert Martinez
+   │   ├── Robot positioning validation
+   │   ├── Basic interference checking
+   │   ├── Core configuration setup
+   │   └── Submit first stage results
+
+2. First Stage Quality Gates
+   ├── Basic interference validation
+   ├── Robot reach verification
+   └── First stage simulation approval
+
+3. Second Stage Simulation
+   ├── Robert Martinez
+   │   ├── Complete robot simulation
+   │   ├── Final interference validation
+   │   ├── Cycle time optimization
+   │   ├── Multi-resource simulation
+   │   ├── Offline programming
+   │   └── Safety validation
+
+4. Final Quality Gates
+   ├── Complete simulation validation
+   ├── Cycle time target verification
+   └── Simulation release approval
+```
+
+### **🔄 Cross-Team Dependencies & Quality Gates**
+```
+Quality Gate 1: First Stage Design Complete
+├── Mechanical Design: All first stage designs complete
+├── Electrical Design: Basic electrical design complete
+├── Simulation: Basic interference validation complete
+├── Procurement: Long lead items identified and suppliers contacted
+└── Gate: All teams pass → Proceed to Second Stage
+
+Quality Gate 2: Second Stage Design Complete
+├── Mechanical Design: All second stage designs complete
+├── Electrical Design: Complete electrical design
+├── Simulation: Complete simulation validation
+├── Procurement: Long lead items ordered (12+ week items)
+└── Gate: All teams pass → Proceed to Detailing
+
+Quality Gate 3: Detailing Complete
+├── Detailing Team: All 2D drawings complete
+├── BOM: Complete and verified
+├── Drawing Review: All drawings approved
+├── Procurement: All critical items ordered and delivery confirmed
+└── Gate: All items pass → Release to Manufacturing
+
+Quality Gate 4: Manufacturing Release
+├── All quality gates passed
+├── All drawings released
+├── All BOMs complete
+├── Procurement: Long lead items received and verified
+└── Gate: Project ready for manufacturing
+```
+
+### **📊 Digital Twin Integration Points**
+```
+Real-Time Tracking:
+├── Each team member's digital twin tracks:
+│   ├── Current capacity and availability
+│   ├── Work progress and completion rates
+│   ├── Quality metrics and performance
+│   └── Bottlenecks and delays
+│
+├── Component digital twins track:
+│   ├── Design status and progress
+│   ├── Quality gate completion
+│   ├── Dependencies and blockers
+│   └── Manufacturing readiness
+│
+├── Procurement digital twins track:
+│   ├── Long lead item status
+│   ├── Supplier lead times and availability
+│   ├── Order placement and tracking
+│   └── Delivery schedules and constraints
+│
+└── System automatically:
+    ├── Identifies bottlenecks
+    ├── Suggests resource reallocation
+    ├── Manages quality gate enforcement
+    ├── Alerts on procurement delays
+    └── Provides real-time project status
+```
+
+### **📦 Long Lead Items Management**
+
+In the 6-robot cell project, long lead items can significantly impact project timelines. NitroPlanner's digital twin system tracks these critical components and ensures early procurement planning.
+
+#### **Typical Long Lead Items in Robot Cell Projects:**
+```
+High-Priority Long Lead Items (12+ weeks):
+├── Custom weld guns (14-16 weeks)
+├── Specialized grippers (12-14 weeks)
+├── Custom cylinders and actuators (10-12 weeks)
+├── Specialized sensors and safety equipment (8-12 weeks)
+└── Custom electrical panels (8-10 weeks)
+
+Medium-Priority Items (8-12 weeks):
+├── Standard robots (8-10 weeks)
+├── Standard cylinders (6-8 weeks)
+├── Electrical components (6-8 weeks)
+└── Standard sensors (4-6 weeks)
+
+Standard Items (4-8 weeks):
+├── Standard fasteners and hardware
+├── Standard electrical components
+├── Standard pneumatic components
+└── Standard mechanical components
+```
+
+#### **Long Lead Item Digital Twins:**
+```
+Custom Weld Gun Twin:
+- Item: 010R01 Custom Spot Welding Gun
+- Lead Time: 14-16 weeks
+- Supplier: External vendor
+- Order Status: Design in progress
+- Critical Path: Must be ordered by Week 2
+- Impact: Delays robot integration if late
+- Current Status: Awaiting final design approval
+
+Custom Gripper Twin:
+- Item: 010R01 Material Handling Gripper
+- Lead Time: 12-14 weeks
+- Supplier: In-house manufacturing
+- Order Status: Design in progress
+- Critical Path: Must be ordered by Week 3
+- Impact: Delays robot integration if late
+- Current Status: First stage design complete
+```
+
+#### **Procurement Timeline Integration:**
+```
+Week 1-2: First Stage Design
+├── BOM Specialist identifies potential long lead items
+├── Preliminary lead time analysis
+└── Early supplier communication
+
+Week 3-4: Second Stage Design
+├── Finalize long lead item specifications
+├── Place orders for 12+ week items
+├── Update project timeline with procurement constraints
+└── Monitor supplier confirmations
+
+Week 5-8: Design Completion
+├── Place orders for 8-12 week items
+├── Monitor long lead item progress
+├── Update project timeline as needed
+└── Alert team of any procurement delays
+
+Week 9+: Manufacturing Phase
+├── Receive long lead items
+├── Verify specifications and quality
+├── Integrate into manufacturing process
+└── Update component digital twins
+```
+
+#### **How NitroPlanner Manages Long Lead Items:**
+1. **Early Identification**: BOM Specialist flags long lead items during first stage design
+2. **Timeline Integration**: System automatically updates project timeline with procurement constraints
+3. **Real-Time Tracking**: Procurement digital twins track order status and delivery schedules
+4. **Risk Management**: System alerts project team of potential delays
+5. **Resource Optimization**: Early procurement planning prevents manufacturing bottlenecks
+
+---
+
 ## 👥 **Stakeholder Digital Twins**
-
-### **Project Management Team**
-
-#### **Project Manager (Sarah Johnson)**
-```
-Digital Twin Profile:
-- Skills: Project management (9/10), Risk management (8/10), Team coordination (9/10)
-- Current Capacity: 70% (managing multiple projects)
-- Availability: Monday-Friday, 8:00-17:00 EST
-- Performance Metrics: 94% on-time delivery, 96% budget accuracy
-- Current Status: Available for new project assignment
-
-Responsibilities:
-- Overall project coordination
-- Timeline management
-- Stakeholder communication
-- Resource allocation
-- Risk management
-```
-
-#### **Engineering Manager (Mike Chen)**
-```
-Digital Twin Profile:
-- Skills: Technical oversight (9/10), Team leadership (8/10), Quality assurance (9/10)
-- Current Capacity: 80% (overseeing multiple projects)
-- Availability: Monday-Friday, 7:00-18:00 EST
-- Performance Metrics: 97% quality score, 92% technical accuracy
-- Current Status: Available for technical oversight
-
-Responsibilities:
-- Technical direction
-- Quality assurance
-- Team coordination
-- Design reviews
-- Technical problem resolution
-```
 
 ### **Mechanical Design Team**
 
@@ -129,6 +442,93 @@ Responsibilities:
 - BOM generation
 ```
 
+#### **Industrial Engineer (Vince Van)**
+```
+Digital Twin Profile:
+- Skills: Machine operation (9/10), Process optimization (8/10), Safety systems (8/10), Automation (9/10)
+- Current Capacity: 65% (working on multiple MO projects)
+- Availability: Monday-Friday, 8:00-18:00 EST
+- Performance Metrics: 96% MO accuracy, 2.8 days average MO time
+- Current Status: Available for MO design
+
+Responsibilities:
+- Create Machine Operation (MO) sequences
+- Define interlock matrices
+- Establish safety requirements
+- Process optimization
+- Integration coordination
+```
+
+#### **Design Checker**
+```
+Digital Twin Profile:
+- Skills: Design review (9/10), Quality assurance (9/10), Standards (8/10), Manufacturing (8/10)
+- Current Capacity: 75% (available for design checking)
+- Availability: Monday-Friday, 8:00-16:00 EST
+- Performance Metrics: 98% review accuracy, 1.5 days average review time
+- Current Status: Available for design checking
+
+Responsibilities:
+- Quality assurance for mechanical designs
+- Design review and validation
+- Standards compliance checking
+- Manufacturing feasibility review
+```
+
+### **Detailing Team**
+
+#### **2D Drafter**
+```
+Digital Twin Profile:
+- Skills: 2D drafting (9/10), CAD (9/10), Manufacturing drawings (9/10), Standards (8/10)
+- Current Capacity: 70% (working on multiple drawing projects)
+- Availability: Monday-Friday, 8:00-17:00 EST
+- Performance Metrics: 97% drawing accuracy, 1.2 days average drawing time
+- Current Status: Available for 2D drafting
+
+Responsibilities:
+- Create 2D manufacturing drawings from 3D models
+- Add dimensions and tolerances
+- Include manufacturing notes
+- Ensure drawing standards compliance
+```
+
+#### **BOM Specialist**
+```
+Digital Twin Profile:
+- Skills: BOM creation (9/10), Parts management (8/10), Materials (8/10), Procurement (9/10), Lead time analysis (9/10)
+- Current Capacity: 80% (available for BOM work)
+- Availability: Monday-Friday, 8:00-16:00 EST
+- Performance Metrics: 99% BOM accuracy, 0.8 days average BOM time
+- Current Status: Available for BOM creation
+
+Responsibilities:
+- Create and manage Bill of Materials
+- Extract components from 3D models
+- Add part numbers and descriptions
+- Include quantities and materials
+- Identify and track long lead items
+- Coordinate early procurement for critical components
+- Monitor supplier lead times and availability
+- Update project timeline based on procurement constraints
+```
+
+#### **Drawing Checker**
+```
+Digital Twin Profile:
+- Skills: Drawing review (9/10), Manufacturing (9/10), Standards (9/10), Quality (8/10)
+- Current Capacity: 65% (working on multiple drawing reviews)
+- Availability: Monday-Friday, 8:00-17:00 EST
+- Performance Metrics: 98% review accuracy, 1.0 days average review time
+- Current Status: Available for drawing checking
+
+Responsibilities:
+- Review all drawings for manufacturability
+- Check drawing completeness
+- Verify standards compliance
+- Manufacturing readiness validation
+```
+
 ### **Electrical Design Team**
 
 #### **Electrical Designer (Alex Thompson)**
@@ -145,24 +545,8 @@ Responsibilities:
 - PLC programming
 - Electrical panels
 - Safety systems
+- Electrical drawings
 - Integration coordination
-```
-
-#### **E-Drawing Designer (Emma Wilson)**
-```
-Digital Twin Profile:
-- Skills: Electrical drawings (8/10), AutoCAD (9/10), Standards (8/10), Documentation (9/10)
-- Current Capacity: 75% (available for e-drawing work)
-- Availability: Monday-Friday, 8:00-16:00 EST
-- Performance Metrics: 98% drawing accuracy, 1.8 days average drawing time
-- Current Status: Available for e-drawing work
-
-Responsibilities:
-- Create all electrical drawings for in-house components
-- Tooling e-drawings
-- Gripper e-drawings
-- Panel layouts
-- Documentation standards
 ```
 
 ### **Simulation Team**
@@ -182,25 +566,6 @@ Responsibilities:
 - Dynamic validation
 - Optimization recommendations
 - Integration validation
-```
-
-### **Manufacturing Team**
-
-#### **Manufacturing Engineer (Patricia Lee)**
-```
-Digital Twin Profile:
-- Skills: Manufacturing planning (8/10), Process optimization (7/10), Quality control (8/10), CNC (8/10)
-- Current Capacity: 60% (managing multiple manufacturing projects)
-- Availability: Monday-Friday, 7:00-16:00 EST
-- Performance Metrics: 94% manufacturing accuracy, 5.2 days average manufacturing time
-- Current Status: Available for manufacturing planning
-
-Responsibilities:
-- Plan and oversee manufacturing of in-house components
-- Tooling manufacturing
-- Gripper assembly
-- Quality control
-- Process optimization
 ```
 
 ---
