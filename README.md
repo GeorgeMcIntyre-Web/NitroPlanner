@@ -9,6 +9,17 @@ AI-powered project management system with digital twin capabilities.
 - **[Digital Twin Guide](./docs/DIGITAL_TWIN_GUIDE.md)** - Digital twin system documentation
 - **[Implementation Summary](./IMPLEMENTATION_SUMMARY.md)** - Feature implementation overview
 
+## 🎯 **Case Study: 6-Robot Cell Project**
+
+See how NitroPlanner manages complex projects with our comprehensive case study:
+
+- **[Robot Cell Case Study](docs/ROBOT_CELL_CASE_STUDY.md)** - Complete project example with digital twins
+- **[Implementation Guide](docs/ROBOT_CELL_IMPLEMENTATION.md)** - Step-by-step setup instructions
+- **[User Workflow Guide](docs/USER_WORKFLOW_GUIDE.md)** - How different user types interact with the system
+- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Essential information for daily use
+
+This case study demonstrates how digital twins transform complex project management from guesswork to data-driven optimization.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
