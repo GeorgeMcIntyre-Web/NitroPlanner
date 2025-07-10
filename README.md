@@ -15,6 +15,7 @@ See how NitroPlanner manages complex projects with our comprehensive case study:
 
 - **[Robot Cell Case Study](docs/ROBOT_CELL_CASE_STUDY.md)** - Complete project example with digital twins
 - **[Implementation Guide](docs/ROBOT_CELL_IMPLEMENTATION.md)** - Step-by-step setup instructions
+- **[Detailed Design Workflow](docs/DESIGN_WORKFLOW_DETAILED.md)** - Complete design-to-manufacturing pipeline
 - **[User Workflow Guide](docs/USER_WORKFLOW_GUIDE.md)** - How different user types interact with the system
 - **[Quick Reference](docs/QUICK_REFERENCE.md)** - Essential information for daily use
 
