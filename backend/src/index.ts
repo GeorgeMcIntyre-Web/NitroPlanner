@@ -7,8 +7,7 @@ import importExportRouter from './routes/import-export';
 import analyticsRouter from './routes/analytics';
 import digitalTwinRouter from './routes/digital-twin';
 import { Request, Response } from 'express';
-// Use require for JS middleware import in TS
-const { errorHandler } = require('./middleware/errorHandler.js');
+import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -124,15 +124,19 @@ router.post('/login', async (req: Request, res: Response) => {
       }
     });
 
+    if (!user) {
+      console.warn(`Failed login attempt: user not found for ${username || email} from IP: ${req.ip}`);
+      res.status(401).json({ error: 'No account found for the provided username or email.' });
+      return;
+    }
+
     // Always use bcrypt.compare to mitigate timing attacks
-    const passwordHash = user ? user.passwordHash : '$2a$12$invalidsaltinvalidsaltinv.uq6pQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQe';
+    const passwordHash = user.passwordHash;
     const isValidPassword = await bcrypt.compare(password, passwordHash);
 
-    if (!user || !isValidPassword) {
-      // Log failed attempt (do not log password)
-      console.warn(`Failed login attempt for user: ${username || email} from IP: ${req.ip}`);
-      // Respond with generic error
-      res.status(401).json({ error: 'Invalid credentials' });
+    if (!isValidPassword) {
+      console.warn(`Failed login attempt: invalid password for user: ${username || email} from IP: ${req.ip}`);
+      res.status(401).json({ error: 'Incorrect password.' });
       return;
     }
 
@@ -158,7 +162,11 @@ router.post('/login', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    if (process.env.NODE_ENV === 'development') {
+      res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : error });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 });
 

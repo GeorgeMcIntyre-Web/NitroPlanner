@@ -100,11 +100,16 @@ router.post('/login', async (req, res) => {
                 OR: orConditions
             }
         });
-        const passwordHash = user ? user.passwordHash : '$2a$12$invalidsaltinvalidsaltinv.uq6pQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQeQe';
+        if (!user) {
+            console.warn(`Failed login attempt: user not found for ${username || email} from IP: ${req.ip}`);
+            res.status(401).json({ error: 'No account found for the provided username or email.' });
+            return;
+        }
+        const passwordHash = user.passwordHash;
         const isValidPassword = await bcryptjs_1.default.compare(password, passwordHash);
-        if (!user || !isValidPassword) {
-            console.warn(`Failed login attempt for user: ${username || email} from IP: ${req.ip}`);
-            res.status(401).json({ error: 'Invalid credentials' });
+        if (!isValidPassword) {
+            console.warn(`Failed login attempt: invalid password for user: ${username || email} from IP: ${req.ip}`);
+            res.status(401).json({ error: 'Incorrect password.' });
             return;
         }
         const token = jsonwebtoken_1.default.sign({ userId: user.id, username: user.username, role: user.role }, process.env.JWT_SECRET || 'fallback-secret', { expiresIn: '24h' });
@@ -124,7 +129,12 @@ router.post('/login', async (req, res) => {
     }
     catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        if (process.env.NODE_ENV === 'development') {
+            res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : error });
+        }
+        else {
+            res.status(500).json({ error: 'Internal server error' });
+        }
     }
 });
 router.post('/2fa/setup', async (req, res) => {

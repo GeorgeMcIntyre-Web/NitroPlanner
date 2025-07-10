@@ -1986,3 +1986,637 @@ Each work unit can have a checklist of the following items (as sub-tasks or qual
 ---
 
 This simulation workflow can be expanded and customized for future projects, ensuring all simulation deliverables are managed, validated, and tracked in a structured, auditable way. 
+
+---
+
+## 🚚 **Shipping & Logistics Management**
+
+### **Equipment Categories & Lead Times**
+
+In the 6-robot cell project, equipment is categorized into three main types, each with different lead times and shipping requirements:
+
+#### **A. Robot Equipment (Bought-Out Items)**
+- **Lead Time:** 12-16 weeks (longest lead time)
+- **Examples:** Fanuc R-2000iC, ABB IRB 6700
+- **Specifications:** Type, payload, reach, software packages, options
+- **Procurement:** Direct from robot manufacturers
+- **Shipping:** Coordinated with manufacturers for direct delivery
+
+#### **B. Custom Items (Unique Items)**
+- **Lead Time:** 8-12 weeks
+- **Examples:** Custom fixtures, grippers, tooling
+- **Manufacturing:** In-house or specialized suppliers
+- **Shipping:** Managed by logistics team
+
+#### **C. Standard Components**
+- **Lead Time:** 4-8 weeks
+- **Examples:** Sensors, pneumatic components, electrical panels
+- **Procurement:** Standard suppliers
+- **Shipping:** Standard freight coordination
+
+### **Robot Equipment List Generation**
+
+The simulation engineer generates a detailed robot equipment list from simulation results, specifying exact robot types, software packages, and configurations:
+
+#### **Robot Equipment List Example:**
+```json
+{
+  "robotEquipmentList": {
+    "project": "6-Robot Cell Project 2025",
+    "generatedBy": "Robert Martinez",
+    "generationDate": "2025-02-07",
+    "robots": [
+      {
+        "robotId": "010R01",
+        "station": "ST010",
+        "type": "Fanuc R-2000iC/210F",
+        "payload": "210kg",
+        "reach": "2650mm",
+        "softwarePackages": [
+          "SpotTool+",
+          "ArcTool",
+          "HandlingTool",
+          "iRVision 2D"
+        ],
+        "options": [
+          "Dual Check Safety",
+          "Force Sensor",
+          "Collision Detection",
+          "Advanced Motion Control"
+        ],
+        "gripperType": "Material Handling/Spot Welding Gun Combo",
+        "leadTime": "14-16 weeks",
+        "manufacturer": "Fanuc America",
+        "estimatedCost": "$85,000"
+      }
+    ],
+    "totalCost": "$487,000",
+    "totalLeadTime": "14-16 weeks",
+    "criticalPath": "Robot procurement is on critical path"
+  }
+}
+```
+
+### **Shipping & Logistics Workflow**
+
+#### **Phase 1: Equipment Specification (Week 6)**
+- Simulation engineer generates robot equipment list
+- Detailed specifications for each robot type and configuration
+- Software packages and options specified
+- Lead times and costs calculated
+
+#### **Phase 2: Procurement Initiation (Week 7-8)**
+- Robot orders placed with manufacturers (14-16 week lead time)
+- Custom items manufacturing initiated (8-12 week lead time)
+- Standard components procurement started (4-8 week lead time)
+
+#### **Phase 3: Manufacturing & Coordination (Week 9-12)**
+- Custom items manufacturing continues
+- Robot manufacturing at suppliers
+- Logistics coordination begins
+
+#### **Phase 4: Shipping Coordination (Week 13-16)**
+- Custom items shipping arranged
+- Robot delivery coordinated with manufacturers
+- Freight coordination for all equipment
+- Delivery schedules confirmed
+
+#### **Phase 5: Equipment Receipt (Week 17)**
+- All equipment received and inspected
+- Assembly preparation begins
+- Quality control validation
+
+### **Critical Path Analysis with Shipping**
+
+#### **Longest Lead Time Items:**
+1. **Robots (14-16 weeks):** Ordered Feb 14, Delivered May 30
+2. **Custom Fixtures (8-12 weeks):** Manufacturing starts Feb 10, Shipped Apr 15
+3. **Standard Components (4-8 weeks):** Ordered Apr 14, Delivered May 30
+
+#### **Shipping Coordination Requirements:**
+- **Custom Items:** Managed by logistics team, shipped from suppliers
+- **Robots:** Coordinated with manufacturers for direct delivery
+- **Standard Items:** Standard freight coordination
+
+### **Logistics Digital Twins**
+
+#### **Equipment Digital Twins:**
+```
+Robot Equipment Twin:
+- Specifications: Type, payload, reach, software packages
+- Status: Ordered/Manufacturing/Shipped/Delivered
+- Lead Time: 14-16 weeks
+- Manufacturer: Fanuc America/ABB Robotics
+- Delivery Schedule: Coordinated with manufacturer
+- Cost: $78,000-$85,000 per robot
+
+Custom Item Twin:
+- Specifications: Custom design based on part geometry
+- Status: Manufacturing/Quality Check/Shipped/Delivered
+- Lead Time: 8-12 weeks
+- Supplier: Specialized manufacturer
+- Shipping: Managed by logistics team
+- Cost: Varies by complexity
+```
+
+#### **Shipping Digital Twins:**
+```
+Shipping Coordination Twin:
+- Equipment Type: Custom/Bought-out/Standard
+- Shipping Method: Freight/Direct Delivery/Express
+- Tracking: Real-time shipment tracking
+- Delivery Schedule: Coordinated delivery dates
+- Status: Arranged/In Transit/Delivered
+- Documentation: Shipping manifests, customs forms
+```
+
+### **Quality Gates for Shipping & Logistics**
+
+#### **Procurement Quality Gates:**
+- Robot equipment list approved
+- All robot orders placed with confirmed lead times
+- Custom items manufacturing initiated
+- Standard components procurement started
+
+#### **Manufacturing Quality Gates:**
+- Custom items manufacturing complete
+- Quality control validation passed
+- Shipping arrangements confirmed
+
+#### **Shipping Quality Gates:**
+- All shipping arrangements confirmed
+- Delivery schedules coordinated
+- Tracking systems in place
+- Customs documentation prepared (if applicable)
+
+#### **Receipt Quality Gates:**
+- All equipment received and inspected
+- Quality validation complete
+- Assembly readiness confirmed
+
+### **Risk Management in Shipping & Logistics**
+
+#### **Common Risks:**
+- **Manufacturer delays:** Robot suppliers behind schedule
+- **Custom item quality issues:** Manufacturing defects requiring rework
+- **Shipping delays:** Freight delays or customs issues
+- **Delivery coordination:** Multiple suppliers delivering on different schedules
+
+#### **Mitigation Strategies:**
+- **Early ordering:** Robots ordered immediately after specification approval
+- **Supplier coordination:** Regular communication with all suppliers
+- **Buffer time:** Built-in buffer for shipping delays
+- **Alternative suppliers:** Backup suppliers for critical components
+- **Real-time tracking:** Continuous monitoring of all shipments
+
+### **Integration with NitroPlanner Workflow**
+
+#### **Work Units for Shipping & Logistics:**
+```
+Robot Equipment List Generation:
+- Input: Simulation results and requirements
+- Output: Detailed robot specifications
+- Responsible: Simulation Engineer
+- Duration: 1 week
+
+Custom Items Manufacturing:
+- Input: Design specifications and requirements
+- Output: Custom fixtures and tooling
+- Responsible: Manufacturing Engineer
+- Duration: 4 weeks
+
+Bought-Out Items Procurement:
+- Input: Robot equipment list and specifications
+- Output: Robot orders and delivery schedules
+- Responsible: Procurement Specialist
+- Duration: 11 weeks
+
+Shipping & Logistics Coordination:
+- Input: Manufacturing schedules and delivery requirements
+- Output: Coordinated delivery of all equipment
+- Responsible: Logistics Coordinator
+- Duration: 7 weeks
+```
+
+#### **Dependencies and Critical Path:**
+```
+Critical Path with Shipping:
+1. Robot Equipment List Generation (Week 6)
+2. Robot Orders Placed (Week 7) - 14-16 week lead time
+3. Custom Items Manufacturing (Week 7-10) - 8-12 week lead time
+4. Shipping Coordination (Week 10-16) - 7 week duration
+5. Equipment Receipt (Week 17)
+6. Assembly & Integration (Week 17-21)
+7. Testing & Commissioning (Week 22-23)
+```
+
+### **Benefits of Integrated Shipping & Logistics**
+
+#### **1. Optimized Timeline Management:**
+- Real-time tracking of all equipment status
+- Early identification of potential delays
+- Coordinated delivery schedules
+- Reduced assembly delays
+
+#### **2. Cost Control:**
+- Accurate cost tracking for all equipment types
+- Optimized shipping methods and routes
+- Reduced expedited shipping costs
+- Better supplier negotiation with detailed specifications
+
+#### **3. Quality Assurance:**
+- Quality control at manufacturing source
+- Inspection upon receipt
+- Documentation of all equipment specifications
+- Traceability throughout the supply chain
+
+#### **4. Risk Mitigation:**
+- Early identification of supply chain risks
+- Alternative supplier options
+- Buffer time for unexpected delays
+- Real-time status monitoring
+
+---
+
+## 📊 **Updated Project Timeline with Shipping (2025)**
+
+### **Complete 2025 Timeline Overview**
+
+```
+6-Robot Cell Project 2025 (With Shipping & Logistics)
+├── Phase 1: Design & Planning (Jan 1 - Jan 17)
+│   ├── Joint Data Import & Validation (Jan 1 - Jan 3)
+│   ├── Sequence Chart Development (Jan 6 - Jan 10)
+│   └── Robot Cell Simulation (Jan 20 - Jan 31)
+├── Phase 2: Equipment Specification (Feb 3 - Feb 7)
+│   └── Robot Equipment List Generation
+├── Phase 3: Manufacturing & Procurement (Feb 10 - Apr 25)
+│   ├── Custom Items Manufacturing (Feb 10 - Mar 7)
+│   ├── Bought-Out Items Procurement (Feb 10 - Apr 25)
+│   └── Shipping & Logistics Coordination (Mar 10 - Apr 25)
+├── Phase 4: Assembly & Integration (Apr 28 - Jun 13)
+└── Phase 5: Testing & Commissioning (Jun 16 - Jun 27)
+```
+
+### **Key Milestones with Shipping**
+
+#### **Q1 2025 Milestones:**
+- ✅ **Jan 3:** Joint Data Import Complete
+- ✅ **Jan 10:** Sequence Chart Approved
+- ✅ **Jan 31:** Robot Simulation Complete
+- ✅ **Feb 7:** Robot Equipment List Approved
+
+#### **Q2 2025 Milestones:**
+- ✅ **Feb 14:** Robot Orders Placed (Critical Path)
+- ✅ **Mar 7:** Custom Items Manufacturing Complete
+- ✅ **Apr 25:** All Equipment Procured and Shipping Arranged
+
+#### **Q3 2025 Milestones:**
+- ✅ **Apr 28:** All Equipment Received
+- ✅ **May 30:** Assembly Complete
+- ✅ **Jun 27:** Production Handoff Complete
+
+### **Resource Allocation with Shipping**
+
+#### **Updated Team Structure:**
+- **Lisa Rodriguez (Mechanical Designer):** 16 hours (Jan 1-3)
+- **Vince Van (Industrial Engineer):** 20 hours (Jan 6-10)
+- **Robert Martinez (Simulation Engineer):** 44 hours (Jan 20-Feb 7)
+- **Manufacturing Engineer:** 40 hours (Feb 10-Mar 7)
+- **Procurement Specialist:** 32 hours (Feb 10-Apr 25)
+- **Logistics Coordinator:** 24 hours (Mar 10-Apr 25)
+- **Assembly Engineer:** 80 hours (Apr 28-Jun 13)
+- **Quality Engineer:** 40 hours (Jun 16-27)
+
+### **Budget Breakdown with Shipping**
+
+#### **Updated Budget Allocation:**
+- **Design & Simulation:** $300,000 (12%)
+- **Custom Items Manufacturing:** $400,000 (16%)
+- **Robot Equipment (Bought-Out):** $487,000 (19%)
+- **Other Bought-Out Items:** $313,000 (13%)
+- **Shipping & Logistics:** $200,000 (8%)
+- **Assembly & Integration:** $400,000 (16%)
+- **Testing & Commissioning:** $200,000 (8%)
+- **Contingency:** $100,000 (4%)
+
+### **Risk Management with Shipping**
+
+#### **Critical Path Risks:**
+1. **Robot delivery delays:** 14-16 week lead time is critical
+2. **Custom item quality issues:** May require rework and delay
+3. **Shipping coordination:** Multiple suppliers and delivery schedules
+4. **Assembly delays:** Equipment not ready when assembly starts
+
+#### **Mitigation Strategies:**
+1. **Early robot ordering:** Immediately after specification approval
+2. **Quality control:** At manufacturing source and upon receipt
+3. **Shipping coordination:** Dedicated logistics coordinator
+4. **Buffer time:** Built into assembly schedule
+
+---
+
+This updated case study now includes comprehensive shipping and logistics management, demonstrating how the 6-robot cell project handles the complex coordination of custom items, bought-out equipment, and shipping logistics to ensure successful project delivery within the 47-second cycle time target.
+
+---
+
+## 🏗️ **Site Installation & Commissioning Process**
+
+### **Overview of Installation Phases**
+
+The 6-robot cell project includes comprehensive site installation and commissioning phases that occur after equipment delivery. These phases are critical for successful project completion and involve multiple teams working in parallel.
+
+### **Phase 1: Site Preparation & Installation (Parallel Tasks)**
+
+#### **Installation Tasks (Parallel Execution)**
+
+```
+Site Installation Tasks (Parallel Execution):
+├── 1. Mark Cell Area
+│   ├── Use measuring equipment relative to datum
+│   ├── Mark robot positions, fixture locations
+│   ├── Mark electrical panel locations
+│   └── Mark pneumatic piping routes
+│
+├── 2. Drill Holes in Floor
+│   ├── Robot mounting holes
+│   ├── Fixture mounting holes
+│   ├── Electrical conduit holes
+│   └── Pneumatic piping holes
+│
+├── 3. Mount Equipment
+│   ├── Install robots on mounting plates
+│   ├── Mount fixtures and tooling
+│   ├── Install electrical panels
+│   └── Mount pneumatic equipment
+│
+├── 4. Install Trunking
+│   ├── Electrical trunking for power distribution
+│   ├── Cable management trunking
+│   ├── Pneumatic trunking for air distribution
+│   └── Safety system trunking
+│
+├── 5. Install Fencing
+│   ├── Safety fencing around cell perimeter
+│   ├── Access gates and interlocks
+│   ├── Emergency stop systems
+│   └── Safety light curtains
+│
+├── 6. Install Electrical Panels
+│   ├── Main power distribution panel
+│   ├── PLC control panel
+│   ├── Robot power panels
+│   └── Safety system panel
+│
+├── 7. Install Wiring
+│   ├── Power wiring to all equipment
+│   ├── Control wiring for PLC systems
+│   ├── Robot communication wiring
+│   └── Safety system wiring
+│
+└── 8. Install Pneumatic Piping
+    ├── Main air supply piping
+    ├── Robot tooling air lines
+    ├── Fixture actuation air lines
+    └── Safety system air lines
+```
+
+#### **Installation Digital Twins**
+
+```
+Site Installation Twin:
+- Installation Phase: Site Preparation/Equipment Mounting/Systems Integration
+- Parallel Tasks: 8 major installation tasks running simultaneously
+- Progress Tracking: Individual task completion percentages
+- Dependencies: Equipment delivery, site readiness, permits
+- Quality Gates: Each installation task has validation checkpoints
+- Safety Compliance: All safety systems and interlocks validated
+```
+
+### **Phase 2: Power-On Milestone - PLC Commissioning**
+
+#### **PLC Commissioning Process**
+
+```
+PLC Commissioning (Power-On Milestone):
+├── 1. Download PLC Offline Program
+│   ├── Upload simulation-validated PLC program
+│   ├── Configure I/O mapping
+│   ├── Set up communication protocols
+│   └── Validate program structure
+│
+├── 2. I/O Checking and Validation
+│   ├── Test all input devices (sensors, switches)
+│   ├── Test all output devices (actuators, indicators)
+│   ├── Validate I/O mapping accuracy
+│   └── Confirm signal integrity
+│
+├── 3. Sequence Validation
+│   ├── Test machine operation sequence
+│   ├── Validate safety interlocks
+│   ├── Test emergency stop systems
+│   └── Confirm cycle time compliance
+│
+└── 4. HMI Download and Configuration
+    ├── Download HMI interface program
+    ├── Configure operator screens
+    ├── Set up alarm systems
+    └── Test operator interface functionality
+```
+
+#### **PLC Commissioning Digital Twin**
+
+```
+PLC Commissioning Twin:
+- Responsible: PLC Engineer (Alex Thompson)
+- Status: Power-On Milestone
+- Progress: 0-100% through commissioning steps
+- Quality Gates: Program download, I/O validation, sequence validation, HMI setup
+- Dependencies: Electrical installation complete, power available
+- Deliverables: Fully functional PLC system ready for robot integration
+```
+
+### **Phase 3: Power-On Milestone - Robot Commissioning**
+
+#### **Robot Commissioning Process**
+
+```
+Robot Commissioning (Power-On Milestone):
+├── 1. Download Robot Offline Program
+│   ├── Upload simulation-generated robot programs
+│   ├── Configure robot parameters
+│   ├── Set up tool data
+│   └── Validate program structure
+│
+├── 2. Path Validation (With/Without Parts)
+│   ├── Run through robot paths without parts
+│   ├── Validate collision-free motion
+│   ├── Test with parts when available
+│   └── Confirm path efficiency
+│
+├── 3. Point Programming and Collision Prevention
+│   ├── Program each weld/sealer point
+│   ├── Ensure collision-free paths
+│   ├── Optimize robot positioning
+│   └── Validate tool orientations
+│
+├── 4. Program Structure Setup
+│   ├── Create master program structure
+│   ├── Set up subroutines and functions
+│   ├── Configure error handling
+│   └── Establish communication protocols
+│
+└── 5. Robot-to-Robot Coordination
+    ├── Define robot zones and boundaries
+    ├── Set up inter-robot communication
+    ├── Configure collision avoidance
+    └── Test multi-robot synchronization
+```
+
+#### **Robot Commissioning Digital Twin**
+
+```
+Robot Commissioning Twin:
+- Responsible: Robot Engineer (Robert Martinez)
+- Status: Power-On Milestone
+- Progress: 0-100% through commissioning steps
+- Quality Gates: Program download, path validation, point programming, structure setup, coordination
+- Dependencies: PLC commissioning complete, robot installation complete
+- Deliverables: Fully functional robot system ready for production
+```
+
+### **Integration with NitroPlanner Workflow**
+
+#### **Work Units for Site Installation & Commissioning**
+
+```
+Site Installation Work Units:
+├── Site Preparation & Marking
+│   ├── Input: Site drawings and equipment specifications
+│   ├── Output: Marked cell area with all positions
+│   ├── Responsible: Site Engineer
+│   └── Duration: 1 week
+│
+├── Equipment Installation (Parallel)
+│   ├── Input: Delivered equipment and installation drawings
+│   ├── Output: All equipment mounted and secured
+│   ├── Responsible: Installation Team
+│   └── Duration: 2 weeks (parallel execution)
+│
+├── Systems Integration
+│   ├── Input: Installed equipment and system specifications
+│   ├── Output: Integrated electrical, pneumatic, and safety systems
+│   ├── Responsible: Systems Integration Engineer
+│   └── Duration: 1 week
+│
+├── PLC Commissioning
+│   ├── Input: PLC programs and system integration
+│   ├── Output: Fully functional PLC system
+│   ├── Responsible: PLC Engineer
+│   └── Duration: 1 week
+│
+└── Robot Commissioning
+    ├── Input: Robot programs and PLC system
+    ├── Output: Fully functional robot system
+    ├── Responsible: Robot Engineer
+    └── Duration: 2 weeks
+```
+
+#### **Quality Gates for Installation & Commissioning**
+
+```
+Installation Quality Gates:
+├── Site Preparation Complete
+│   ├── Cell area marked and validated
+│   ├── All mounting positions confirmed
+│   └── Site ready for equipment installation
+│
+├── Equipment Installation Complete
+│   ├── All equipment mounted and secured
+│   ├── Safety systems installed
+│   └── Equipment ready for systems integration
+│
+├── Systems Integration Complete
+│   ├── Electrical systems functional
+│   ├── Pneumatic systems operational
+│   ├── Safety systems validated
+│   └── All systems ready for commissioning
+│
+├── PLC Commissioning Complete
+│   ├── PLC program downloaded and functional
+│   ├── I/O validation complete
+│   ├── Sequence validation successful
+│   └── HMI operational
+│
+└── Robot Commissioning Complete
+    ├── Robot programs downloaded and functional
+    ├── Path validation complete
+    ├── Point programming complete
+    ├── Program structure established
+    └── Robot coordination validated
+```
+
+### **Timeline Integration**
+
+#### **Updated Project Timeline with Installation & Commissioning**
+
+```
+6-Robot Cell Project 2025 (Complete Timeline):
+├── Phase 1: Design & Planning (Jan 1 - Jan 17)
+├── Phase 2: Equipment Specification (Feb 3 - Feb 7)
+├── Phase 3: Manufacturing & Procurement (Feb 10 - Apr 25)
+├── Phase 4: Shipping & Logistics (Mar 10 - Apr 25)
+├── Phase 5: Site Installation (Apr 28 - May 16)
+│   ├── Site Preparation (Apr 28 - May 2)
+│   ├── Equipment Installation (May 5 - May 16) - Parallel
+│   └── Systems Integration (May 19 - May 23)
+├── Phase 6: Commissioning (May 26 - Jun 13)
+│   ├── PLC Commissioning (May 26 - Jun 2)
+│   └── Robot Commissioning (Jun 3 - Jun 13)
+└── Phase 7: Testing & Production Handoff (Jun 16 - Jun 27)
+```
+
+### **Resource Allocation for Installation & Commissioning**
+
+#### **Updated Team Structure:**
+- **Site Engineer:** 40 hours (Apr 28-May 23)
+- **Installation Team:** 160 hours (May 5-May 16)
+- **Systems Integration Engineer:** 40 hours (May 19-May 23)
+- **PLC Engineer (Alex Thompson):** 40 hours (May 26-Jun 2)
+- **Robot Engineer (Robert Martinez):** 80 hours (Jun 3-Jun 13)
+- **Assembly Engineer:** 80 hours (Apr 28-Jun 13)
+- **Quality Engineer:** 40 hours (Jun 16-27)
+
+### **Risk Management for Installation & Commissioning**
+
+#### **Common Installation Risks:**
+- **Site preparation delays:** Weather, permits, site access
+- **Equipment installation issues:** Mounting problems, alignment issues
+- **Systems integration problems:** Wiring errors, communication issues
+- **Commissioning delays:** Program bugs, hardware failures
+
+#### **Mitigation Strategies:**
+- **Site preparation:** Early site survey and permit acquisition
+- **Equipment installation:** Detailed installation procedures and quality control
+- **Systems integration:** Comprehensive testing and validation
+- **Commissioning:** Offline program validation and simulation testing
+
+### **Commissioning Success Criteria**
+
+#### **PLC Commissioning Success:**
+- All I/O devices functional and validated
+- Machine operation sequence matches simulation
+- Safety systems operational and tested
+- HMI interface functional and user-friendly
+- Cycle time within 47-second target
+
+#### **Robot Commissioning Success:**
+- All robot programs downloaded and functional
+- Collision-free paths validated
+- All weld/sealer points programmed and tested
+- Robot coordination and synchronization working
+- Production-ready robot system
+
+---
+
+This comprehensive site installation and commissioning process ensures that the 6-robot cell project transitions smoothly from equipment delivery to fully operational production system, meeting the 47-second cycle time target and all quality requirements.

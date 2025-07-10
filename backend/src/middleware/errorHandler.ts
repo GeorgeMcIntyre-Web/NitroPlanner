@@ -1,5 +1,7 @@
 // Error handling middleware
-const errorHandler = (err, req, res, next) => {
+import { Request, Response, NextFunction } from 'express';
+
+const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
 
   // Prisma errors
@@ -57,11 +59,16 @@ const errorHandler = (err, req, res, next) => {
     message: message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
+  return;
 };
 
 // Custom error class
 class AppError extends Error {
-  constructor(message, statusCode) {
+  statusCode: number;
+  status: string;
+  isOperational: boolean;
+
+  constructor(message: string, statusCode: number) {
     super(message);
     this.statusCode = statusCode;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
@@ -71,7 +78,4 @@ class AppError extends Error {
   }
 }
 
-module.exports = {
-  errorHandler,
-  AppError
-}; 
+export { errorHandler, AppError }; 
