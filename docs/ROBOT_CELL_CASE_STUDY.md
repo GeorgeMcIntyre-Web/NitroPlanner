@@ -17,41 +17,611 @@ This case study demonstrates how NitroPlanner's digital twin system manages a co
 ### **Station Layout:**
 ```
 ST010 Turn Table
-├── ST010_1 Side 1 Tooling
-├── ST010_2 Side 2 Tooling
-└── 010R01 Material Handling/Spot Welding Gun gripper combo
+├── ST010_1 Side 1 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+├── ST010_2 Side 2 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+└── 010R01 Material Handling/Spot Welding Gun gripper combo (composed of units: vacuum cups, mechanical fingers, sensors)
 
-ST015 Putdown stand
+ST015 Putdown stand (composed of units: part sensors, actuators if present)
 
 ST020
-├── ST020_1 Side 1 Tooling
-├── ST020_2 Side 2 Tooling
-└── 020R01 Material Handling/Spot Welding Gun gripper combo
+├── ST020_1 Side 1 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+├── ST020_2 Side 2 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+└── 020R01 Material Handling/Spot Welding Gun gripper combo (composed of units: vacuum cups, mechanical fingers, sensors)
 
-ST025 Putdown stand
+ST025 Putdown stand (composed of units: part sensors, actuators if present)
 
 ST030
-├── ST030_1 Side 1 Tooling
-├── ST030_2 Side 2 Tooling
-└── 030R01 Material Handling/Spot Welding Gun gripper combo
+├── ST030_1 Side 1 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+├── ST030_2 Side 2 Tooling (composed of units: clamps, pins, slides, dumps, sensors)
+└── 030R01 Material Handling/Spot Welding Gun gripper combo (composed of units: vacuum cups, mechanical fingers, sensors)
 
-ST035 Putdown stand
+ST035 Putdown stand (composed of units: part sensors, actuators if present)
 
 ST040
-└── 040R01 Material Handling Ped Spot Welding Gun
+└── 040R01 Material Handling Ped Spot Welding Gun (composed of units: vacuum cups, mechanical fingers, sensors)
 
-ST045 Putdown stand
+ST045 Putdown stand (composed of units: part sensors, actuators if present)
 
 ST050
-└── 050R01 Material Handling Ped Spot Welding Gun
+└── 050R01 Material Handling Ped Spot Welding Gun (composed of units: vacuum cups, mechanical fingers, sensors)
 
-ST055 Putdown stand
+ST055 Putdown stand (composed of units: part sensors, actuators if present)
 
 ST060
-└── 060R01 Material Handling Ped Spot Welding Gun
+└── 060R01 Material Handling Ped Spot Welding Gun (composed of units: vacuum cups, mechanical fingers, sensors)
 
 ST065 Exit Conveyor
 ```
+
+**Note:** A **unit** is the individual component number that represents specific mechanical elements like clamps, pins, slides, dumps, sensors, actuators, etc. Fixtures, tooling, and grippers are composed of multiple units working together.
+
+---
+
+## 🔧 **Understanding Units in Manufacturing**
+
+### **What is a Unit?**
+A **unit** is the individual component number that represents specific mechanical elements within fixtures, tooling, and grippers. Each unit has a unique identifier and specific function in the manufacturing process.
+
+### **Custom Tooling Design:**
+**Fixtures and grippers are unique designs** based on the 3D part geometry received from the OEM (Original Equipment Manufacturer). Each tooling design is specifically engineered to:
+- **Match the exact part geometry** (contours, features, dimensions)
+- **Accommodate specific part tolerances** and material properties
+- **Handle the unique manufacturing requirements** of that particular part
+- **Integrate with the specific robot cell layout** and process sequence
+
+### **Unit Types and Examples:**
+```
+Clamps:
+├── Unit 102-C1: Ø50, 90° clamp (Tuenkers VU 50.1 BR2 A05 T12) - Pneumatic
+├── Unit 242-C1: Alternative clamp configuration - Servo motor
+└── Unit 105-C1: Ø57, 50mm slide (Zaytran LSA-73-L-G-50-SEN-TRK) - Pneumatic
+
+Pins:
+├── Unit 101-PK51: Part-in-place proxy sensor - Passive
+├── Unit 103-PK52: Location pin for part positioning - Pneumatic
+└── Unit 104-PK53: Dowel pin for fixture alignment - Manual
+
+Slides:
+├── Unit 105-C1: Linear slide with sensor - Pneumatic
+├── Unit 106-SL1: Transfer slide mechanism - Servo motor
+└── Unit 107-SL2: Dump slide for part removal - Pneumatic
+
+Dumps:
+├── Unit 201-D1: Part dump mechanism - Pneumatic
+├── Unit 202-D2: Material handling dump - Servo motor
+└── Unit 203-D3: Transfer dump station - Pneumatic
+
+Sensors:
+├── Unit 301-S1: Part presence sensor - Electrical
+├── Unit 302-S2: Clamp position sensor - Electrical
+└── Unit 303-S3: Safety interlock sensor - Electrical
+
+Actuators:
+├── Unit 401-A1: Pneumatic cylinder - Air pressure
+├── Unit 402-A2: Electric actuator - Servo motor
+└── Unit 403-A3: Hydraulic cylinder - Hydraulic pressure
+```
+
+### **Unit Actuation Methods:**
+Units can be controlled by different actuation methods, specified by customer requirements or driven by design constraints:
+
+#### **Pneumatic Actuation:**
+- **Air pressure control**: Most common for clamps, slides, dumps
+- **Advantages**: Simple, reliable, cost-effective, fast response
+- **Examples**: Unit 102-C1 (clamp), Unit 105-C1 (slide), Unit 201-D1 (dump)
+- **Control**: PLC controls solenoid valves for air flow
+
+#### **Servo Motor Actuation:**
+- **Precise position control**: For applications requiring exact positioning
+- **Advantages**: High precision, programmable motion, feedback control
+- **Examples**: Unit 242-C1 (precision clamp), Unit 106-SL1 (transfer slide)
+- **Control**: Servo drive with position feedback and motion control
+
+#### **Electric Actuation:**
+- **Electric motor control**: For applications requiring variable speed/force
+- **Advantages**: Energy efficient, precise control, no air supply needed
+- **Examples**: Unit 402-A2 (electric actuator)
+- **Control**: Variable frequency drive or servo control
+
+#### **Hydraulic Actuation:**
+- **High force applications**: For heavy-duty clamping or positioning
+- **Advantages**: High force output, smooth motion
+- **Examples**: Unit 403-A3 (hydraulic cylinder)
+- **Control**: Hydraulic valves and pressure control
+
+#### **Passive/Manual Units:**
+- **No actuation required**: Sensors, manual pins, passive components
+- **Examples**: Unit 101-PK51 (proxy sensor), Unit 104-PK53 (manual dowel pin)
+
+### **Unit Specifications (from MO Table):**
+Each unit has detailed specifications tracked in the Machine Operation (MO) system:
+
+| Unit Number | Type | Specifications | Actuation Method | Monitoring | Key Identifier | Manufacturer |
+|-------------|------|----------------|------------------|------------|----------------|--------------|
+| 102-C1 | Clamp | Ø50, 90° | Pneumatic | Internal | 2.1 | Tuenkers |
+| 105-C1 | Slide | Ø57, 50mm | Pneumatic | Internal | 1 | Zaytran |
+| 242-C1 | Clamp | Ø40, 90° | Servo Motor | Internal | 2.2 | Tuenkers |
+| 101-PK51 | Proxy | N/A | Passive | N/A | N/A | N/A |
+
+### **Tooling Design Process Based on OEM Part Data:**
+
+#### **Input from OEM:**
+- **3D CAD model** of the part to be manufactured
+- **Part specifications** (materials, tolerances, surface finish requirements)
+- **Manufacturing requirements** (cycle time, quality standards, production volume)
+- **Assembly constraints** (weld locations, access requirements, interference zones)
+- **Joint Data** (spot welding locations, sealer application, gluing points, joining specifications)
+
+#### **Design Process:**
+```
+1. Part Analysis
+   ├── Import OEM 3D part model into CAD system
+   ├── Analyze part geometry for clamping and locating points
+   ├── Identify weld gun access requirements and interference zones
+   ├── Determine gripper interface points and payload requirements
+   └── Create design constraints and requirements document
+
+2. Fixture Design
+   ├── Design custom fixture structure to match part geometry
+   ├── Position units (clamps, pins, slides) based on part features
+   ├── Ensure proper part support and stability during welding
+   ├── Design for easy part loading/unloading ergonomics
+   └── Validate against OEM specifications and requirements
+
+3. Gripper Design
+   ├── Design custom gripper interface to match part geometry
+   ├── Select appropriate units (vacuum cups, mechanical fingers) for part handling
+   ├── Ensure secure gripping without damaging part surfaces
+   ├── Design for robot integration and payload capacity
+   └── Validate gripper access through fixture openings
+```
+
+---
+
+## 🔗 **Joint Data: OEM Joining Specifications**
+
+### **What is Joint Data?**
+**Joint Data** is the critical information from the OEM that specifies how parts are joined together in the manufacturing process. This data drives the simulation process and determines the equipment, tools, and processes needed in the robot cell.
+
+### **Types of Joint Data:**
+
+#### **Spot Welding Data:**
+```
+Spot Weld Specifications:
+├── Weld Locations: X,Y,Z coordinates for each weld point
+├── Weld Parameters: Current, voltage, pressure, time
+├── Weld Sequence: Order of welds for optimal quality
+├── Gun Requirements: Specific weld gun type and specifications
+├── Electrode Design: Electrode geometry and material
+├── Quality Standards: Weld strength, appearance requirements
+└── Inspection Points: Destructive and non-destructive testing locations
+
+Example Spot Weld Data:
+├── Weld Point 1: X=150, Y=75, Z=25 | Current=12kA | Pressure=450N | Time=0.3s
+├── Weld Point 2: X=300, Y=75, Z=25 | Current=12kA | Pressure=450N | Time=0.3s
+├── Weld Point 3: X=450, Y=75, Z=25 | Current=12kA | Pressure=450N | Time=0.3s
+└── [Additional weld points...]
+```
+
+#### **Sealer Application Data:**
+```
+Sealer Specifications:
+├── Sealer Type: Material composition and properties
+├── Application Points: X,Y,Z coordinates for sealer application
+├── Bead Dimensions: Width, height, cross-sectional area
+├── Application Method: Manual, robot, automated system
+├── Curing Requirements: Temperature, time, environment
+├── Quality Standards: Coverage, adhesion, appearance
+└── Equipment Requirements: Sealer gun, pump, delivery system
+
+Example Sealer Data:
+├── Sealer Point 1: X=100, Y=50, Z=30 | Bead Width=8mm | Height=3mm
+├── Sealer Point 2: X=200, Y=50, Z=30 | Bead Width=8mm | Height=3mm
+├── Sealer Point 3: X=300, Y=50, Z=30 | Bead Width=8mm | Height=3mm
+└── [Additional sealer points...]
+```
+
+#### **Gluing/Adhesive Data:**
+```
+Adhesive Specifications:
+├── Adhesive Type: Material composition and curing method
+├── Application Points: X,Y,Z coordinates for adhesive application
+├── Bond Area: Surface area and geometry requirements
+├── Application Method: Dispensing, spraying, manual
+├── Curing Process: Temperature, pressure, time requirements
+├── Quality Standards: Bond strength, coverage, appearance
+└── Equipment Requirements: Dispensing system, curing equipment
+
+Example Adhesive Data:
+├── Glue Point 1: X=125, Y=100, Z=20 | Bond Area=25mm² | Curing Time=2min
+├── Glue Point 2: X=275, Y=100, Z=20 | Bond Area=25mm² | Curing Time=2min
+├── Glue Point 3: X=425, Y=100, Z=20 | Bond Area=25mm² | Curing Time=2min
+└── [Additional glue points...]
+```
+
+#### **Other Joining Technologies:**
+```
+Additional Joining Methods:
+├── Laser Welding: Power, speed, focus, gas requirements
+├── MIG/TIG Welding: Current, voltage, wire feed, gas flow
+├── Riveting: Rivet type, size, installation force
+├── Clinching: Tool geometry, force requirements
+├── Brazing: Temperature, filler material, flux requirements
+└── Mechanical Fastening: Bolt type, torque, sequence
+```
+
+### **Joint Data Integration in Simulation:**
+
+#### **Simulation Engineer's Role:**
+```
+Joint Data Processing:
+├── Import joint data from OEM specifications
+├── Validate joint locations against part geometry
+├── Check robot reach and access to all joint points
+├── Verify tool interference and clearance requirements
+├── Optimize robot paths for efficient joint application
+├── Calculate cycle times based on joint requirements
+├── Validate quality standards and inspection points
+└── Generate simulation reports and recommendations
+```
+
+#### **Joint Data in Robot Cell Design:**
+```
+Equipment Selection Based on Joint Data:
+├── Weld Guns: Selected based on joint specifications and accessibility
+├── Sealer Guns: Chosen for bead dimensions and application method
+├── Adhesive Dispensers: Selected for adhesive type and application requirements
+├── Robot Payload: Calculated based on tool weight and joint forces
+├── Tool Changers: Required for multiple joining processes
+├── Quality Equipment: Inspection and testing equipment for joint validation
+└── Safety Systems: Designed around joint application hazards
+```
+
+### **Joint Data Digital Twins:**
+
+#### **Joint Point Digital Twins:**
+```
+Spot Weld Point Twin:
+- Location: X=150, Y=75, Z=25 (from OEM joint data)
+- Parameters: Current=12kA, Pressure=450N, Time=0.3s
+- Robot Access: Validated by simulation engineer
+- Tool Requirements: Specific weld gun and electrode
+- Quality Standards: Weld strength, appearance criteria
+- Inspection: Destructive testing location and frequency
+- Status: Validated/In Progress/Complete
+
+Sealer Point Twin:
+- Location: X=100, Y=50, Z=30 (from OEM joint data)
+- Parameters: Bead Width=8mm, Height=3mm
+- Application Method: Robot-mounted sealer gun
+- Equipment: Sealer pump, delivery system, gun
+- Curing: Temperature and time requirements
+- Quality Standards: Coverage and adhesion criteria
+- Status: Validated/In Progress/Complete
+```
+
+#### **Joint Process Digital Twins:**
+```
+Spot Welding Process Twin:
+- Total Weld Points: 24 (from OEM joint data)
+- Weld Sequence: Optimized for quality and cycle time
+- Robot Path: Calculated for efficient weld application
+- Cycle Time: 47 seconds target (includes all welds)
+- Quality Gates: Each weld point validated
+- Equipment Status: Weld guns, electrodes, power supply
+- Performance Metrics: Weld quality, cycle time, uptime
+
+Sealing Process Twin:
+- Total Sealer Points: 12 (from OEM joint data)
+- Application Sequence: Optimized for coverage and efficiency
+- Robot Path: Calculated for smooth sealer application
+- Cycle Time: Integrated into 47-second target
+- Quality Gates: Coverage validation, adhesion testing
+- Equipment Status: Sealer guns, pumps, delivery systems
+- Performance Metrics: Coverage quality, application speed
+```
+
+### **Joint Data Validation Process:**
+
+#### **Simulation Validation:**
+```
+1. Joint Data Import
+   ├── Import OEM joint specifications into simulation software
+   ├── Validate joint locations against 3D part geometry
+   ├── Check for conflicts or impossible joint locations
+   └── Flag any issues for OEM review
+
+2. Robot Accessibility Analysis
+   ├── Verify robot can reach all joint points
+   ├── Check for interference with fixtures and tooling
+   ├── Validate tool orientation requirements
+   └── Optimize robot positioning for joint access
+
+3. Process Optimization
+   ├── Calculate optimal joint application sequence
+   ├── Minimize robot travel time between joints
+   ├── Balance workload across multiple robots
+   └── Validate cycle time targets
+
+4. Quality Validation
+   ├── Ensure all joint quality standards can be met
+   ├── Validate inspection and testing procedures
+   ├── Check equipment capabilities against requirements
+   └── Confirm safety requirements are satisfied
+```
+
+### **Joint Data in NitroPlanner Workflow:**
+
+#### **Work Units and Quality Gates:**
+```
+Joint Data Processing Work Units:
+├── Joint Data Import: Import and validate OEM joint specifications
+├── Robot Accessibility: Verify all joints are accessible by robots
+├── Tool Selection: Select appropriate tools for each joint type
+├── Path Optimization: Optimize robot paths for joint application
+├── Cycle Time Validation: Ensure joint process fits cycle time target
+├── Quality Gate Setup: Establish quality gates for each joint type
+└── Equipment Integration: Integrate joint equipment into cell design
+
+Quality Gates for Joint Data:
+├── Joint Data Complete: All OEM joint specifications imported and validated
+├── Robot Access Validated: All joint points accessible by assigned robots
+├── Tool Selection Complete: Appropriate tools selected for all joint types
+├── Path Optimization Complete: Robot paths optimized for efficiency
+├── Cycle Time Validated: Joint process fits within target cycle time
+├── Quality Standards Met: All joint quality requirements can be satisfied
+└── Equipment Integration Complete: All joint equipment integrated into cell
+```
+
+---
+
+## 📊 **Sequence Chart: Cycle Time Validation on Paper**
+
+### **What is the Sequence Chart?**
+The **Sequence Chart** is a critical document that validates the overall cycle time on paper before simulation begins. It uses synthetic times for each operation and motion to ensure the 47-second cycle time target can be achieved.
+
+### **Purpose of Sequence Chart:**
+- **Pre-simulation validation**: Verify cycle time feasibility before detailed simulation
+- **Process optimization**: Identify bottlenecks and optimize sequences
+- **Resource allocation**: Balance workload across multiple robots
+- **Risk mitigation**: Catch timing issues early in the design process
+- **Stakeholder communication**: Clear visualization of the complete process
+
+### **Sequence Chart Structure:**
+
+#### **Time-Based Process Breakdown:**
+```
+Sequence Chart Format:
+├── Station/Operation: Specific station or operation being performed
+├── Robot/Equipment: Which robot or equipment performs the operation
+├── Operation Type: Motion, weld, seal, transfer, etc.
+├── Synthetic Time: Predefined time for this type of operation
+├── Start Time: When this operation begins in the cycle
+├── End Time: When this operation completes
+├── Dependencies: What must complete before this operation starts
+└── Notes: Additional information or constraints
+```
+
+#### **Example Sequence Chart for 6-Robot Cell:**
+```
+| Time | Station | Robot | Operation | Synthetic Time | Start | End | Dependencies |
+|------|---------|-------|-----------|----------------|-------|-----|--------------|
+| 0.0s | ST010   | 010R01| Load Part | 3.2s           | 0.0s  | 3.2s| None         |
+| 3.2s | ST010   | 010R01| Position  | 1.8s           | 3.2s  | 5.0s| Load Complete|
+| 5.0s | ST010   | 010R01| Weld 1-4  | 8.5s           | 5.0s  | 13.5s| Position     |
+| 13.5s| ST010   | 010R01| Transfer  | 2.1s           | 13.5s | 15.6s| Weld Complete|
+| 15.6s| ST020   | 020R01| Receive   | 1.5s           | 15.6s | 17.1s| Transfer     |
+| 17.1s| ST020   | 020R01| Weld 5-8  | 7.8s           | 17.1s | 24.9s| Receive      |
+| 24.9s| ST020   | 020R01| Transfer  | 2.1s           | 24.9s | 27.0s| Weld Complete|
+| 27.0s| ST030   | 030R01| Receive   | 1.5s           | 27.0s | 28.5s| Transfer     |
+| 28.5s| ST030   | 030R01| Weld 9-12 | 8.2s           | 28.5s | 36.7s| Receive      |
+| 36.7s| ST030   | 030R01| Transfer  | 2.1s           | 36.7s | 38.8s| Weld Complete|
+| 38.8s| ST040   | 040R01| Receive   | 1.5s           | 38.8s | 40.3s| Transfer     |
+| 40.3s| ST040   | 040R01| Seal 1-4  | 6.7s           | 40.3s | 47.0s| Receive      |
+```
+
+### **Synthetic Time Database:**
+
+#### **Motion Times:**
+```
+Robot Motion Synthetic Times:
+├── Linear Move: 0.5s + (distance/1000mm × 0.8s)
+├── Joint Move: 0.3s + (angle/90° × 0.6s)
+├── Approach: 0.8s (standard approach distance)
+├── Depart: 0.6s (standard depart distance)
+├── Tool Change: 2.5s (automatic tool changer)
+└── Wait/Sync: 0.2s (synchronization delay)
+```
+
+#### **Process Times:**
+```
+Joining Process Synthetic Times:
+├── Spot Weld: 0.3s (squeeze + weld + release)
+├── Sealer Application: 0.8s per 100mm bead length
+├── Adhesive Dispense: 0.5s per application point
+├── Clamp Open/Close: 0.4s (pneumatic)
+├── Part Transfer: 2.1s (pick + move + place)
+└── Quality Check: 0.5s (sensor reading)
+```
+
+#### **Equipment Times:**
+```
+Equipment Operation Times:
+├── Turn Table Index: 1.2s (90° rotation)
+├── Conveyor Move: 1.5s (part transfer)
+├── Tool Actuation: 0.3s (pneumatic/electrical)
+├── Sensor Reading: 0.1s (electrical)
+└── Safety Check: 0.2s (interlock validation)
+```
+
+### **Sequence Chart Development Process:**
+
+#### **Phase 1: Basic Sequence Definition**
+```
+1. Define Process Flow
+   ├── List all stations and operations in sequence
+   ├── Identify which robot/equipment performs each operation
+   ├── Define dependencies between operations
+   └── Establish parallel vs. sequential operations
+
+2. Assign Synthetic Times
+   ├── Apply motion times based on estimated distances
+   ├── Apply process times based on joint data requirements
+   ├── Apply equipment times based on standard operations
+   └── Add safety margins and synchronization delays
+```
+
+#### **Phase 2: Cycle Time Optimization**
+```
+1. Identify Bottlenecks
+   ├── Find operations with longest synthetic times
+   ├── Identify resource conflicts (multiple robots needing same resource)
+   ├── Spot sequential dependencies that create delays
+   └── Flag operations that exceed target cycle time
+
+2. Optimize Sequence
+   ├── Parallel operations where possible
+   ├── Reduce motion distances and times
+   ├── Optimize robot positioning for efficiency
+   ├── Balance workload across multiple robots
+   └── Minimize tool change requirements
+```
+
+#### **Phase 3: Validation and Refinement**
+```
+1. Validate Against Target
+   ├── Calculate total cycle time from sequence chart
+   ├── Compare against 47-second target
+   ├── Identify areas needing improvement
+   └── Adjust synthetic times based on experience
+
+2. Stakeholder Review
+   ├── Review sequence with design team
+   ├── Validate synthetic times with simulation engineer
+   ├── Confirm feasibility with manufacturing team
+   └── Get approval from project management
+```
+
+### **Sequence Chart Digital Twin:**
+
+#### **Sequence Chart Twin:**
+```
+Sequence Chart Digital Twin:
+- Total Cycle Time: 47.0s (calculated from synthetic times)
+- Target Cycle Time: 47.0s (OEM requirement)
+- Margin: 0.0s (no safety margin, needs optimization)
+- Bottlenecks: ST040 sealing operation (6.7s)
+- Parallel Operations: 3 robots working simultaneously
+- Dependencies: 12 sequential dependencies identified
+- Status: Under Review/Optimization Required/Approved
+- Version: 1.2 (updated after optimization)
+```
+
+#### **Operation Digital Twins:**
+```
+Individual Operation Twins:
+├── ST010 Load Operation Twin:
+│   - Synthetic Time: 3.2s
+│   - Actual Time: TBD (from simulation)
+│   - Robot: 010R01
+│   - Dependencies: None
+│   - Status: Validated/In Progress
+│
+├── ST010 Weld Operation Twin:
+│   - Synthetic Time: 8.5s (4 welds × 2.1s + motion)
+│   - Actual Time: TBD (from simulation)
+│   - Robot: 010R01
+│   - Dependencies: Load and Position complete
+│   - Status: Validated/In Progress
+│
+└── [Additional operation twins...]
+```
+
+### **Sequence Chart in NitroPlanner Workflow:**
+
+#### **Work Units and Quality Gates:**
+```
+Sequence Chart Work Units:
+├── Sequence Definition: Define basic process flow and operations
+├── Synthetic Time Assignment: Apply synthetic times to all operations
+├── Cycle Time Calculation: Calculate total cycle time from sequence
+├── Bottleneck Analysis: Identify and analyze timing bottlenecks
+├── Sequence Optimization: Optimize sequence for cycle time target
+├── Stakeholder Review: Review and approve sequence chart
+└── Simulation Handoff: Hand off validated sequence to simulation
+
+Quality Gates for Sequence Chart:
+├── Sequence Complete: All operations defined and sequenced
+├── Synthetic Times Assigned: All operations have synthetic times
+├── Cycle Time Calculated: Total cycle time calculated and documented
+├── Target Met: Cycle time meets or beats 47-second target
+├── Bottlenecks Identified: All bottlenecks identified and addressed
+├── Stakeholder Approved: Sequence chart reviewed and approved
+└── Ready for Simulation: Sequence chart ready for detailed simulation
+```
+
+### **Integration with Joint Data:**
+```
+Joint Data to Sequence Chart Integration:
+├── Joint Data Import: Import OEM joint specifications
+├── Operation Definition: Define operations based on joint requirements
+├── Synthetic Time Assignment: Apply synthetic times for each joint type
+├── Sequence Optimization: Optimize sequence for joint application efficiency
+├── Cycle Time Validation: Ensure joint process fits cycle time target
+└── Simulation Preparation: Prepare sequence for detailed simulation validation
+```
+
+### **Benefits of Sequence Chart:**
+- **Early validation**: Catch timing issues before expensive simulation
+- **Process optimization**: Identify and resolve bottlenecks early
+- **Resource planning**: Optimize robot and equipment utilization
+- **Risk mitigation**: Reduce risk of missing cycle time targets
+- **Communication tool**: Clear visualization for all stakeholders
+- **Cost savings**: Avoid expensive simulation iterations
+
+### **Unit Integration in Fixtures/Tooling:**
+```
+ST010_1 Side 1 Tooling Example (Custom Design for Specific Part):
+├── Unit 102-C1: Main clamping unit (Pneumatic) - Positioned for part feature A
+├── Unit 103-PK52: Location pin unit (Pneumatic) - Matches part hole B
+├── Unit 105-C1: Transfer slide unit (Pneumatic) - Accommodates part geometry C
+├── Unit 201-D1: Part dump unit (Pneumatic) - Designed for part weight/size
+├── Unit 301-S1: Part presence sensor unit (Electrical) - Positioned for part feature D
+└── Unit 302-S2: Clamp position sensor unit (Electrical) - Monitors clamp engagement
+
+010R01 Gripper Example (Custom Design for Specific Part):
+├── Unit 401-V1: Vacuum cup unit (Pneumatic) - Sized for part surface area
+├── Unit 402-MF1: Mechanical finger unit (Servo Motor) - Contoured to part geometry
+├── Unit 403-S1: Part sensor unit (Electrical) - Positioned for part detection
+└── Unit 404-PS1: Pressure sensor unit (Electrical) - Monitors grip force
+```
+
+### **Unit Digital Twins:**
+Each unit has its own digital twin tracking:
+- **Specifications**: Size, stroke, monitoring type, actuation method
+- **Performance**: Cycle times, reliability, maintenance history, actuation efficiency
+- **Dependencies**: Interlock requirements, sequence constraints, actuation timing
+- **Status**: Operational, maintenance, replacement needed, actuation system health
+- **Integration**: How it works with other units in the assembly, actuation coordination
+- **Actuation Control**: PLC signals, servo parameters, pneumatic pressure, electrical signals
+
+### **Unit Management in NitroPlanner:**
+- **Individual tracking**: Each unit is tracked separately with its own work units
+- **Interlock matrix**: Units have dependencies (e.g., clamp must be open before slide moves)
+- **Actuation coordination**: Pneumatic, servo, and electric units are synchronized
+- **Maintenance schedules**: Each unit has specific maintenance requirements based on actuation type
+- **Version control**: Unit changes are tracked and versioned, including actuation method changes
+- **BOM integration**: Units are listed individually in Bill of Materials with actuation specifications
+- **Control system integration**: PLC programming, servo parameters, and electrical schematics
+
+### **Custom Design Impact on Digital Twins:**
+Since each tooling design is unique based on OEM part geometry:
+- **Part-specific digital twins**: Each fixture/gripper digital twin is linked to the specific OEM part
+- **Custom unit positioning**: Unit locations and specifications are unique to each part design
+- **Part geometry validation**: Digital twins validate that tooling matches the exact part geometry
+- **OEM requirement tracking**: All OEM specifications are tracked and validated in the digital twin
+- **Design iteration management**: Changes to OEM part geometry trigger tooling design updates
+- **Part-specific BOMs**: Bill of Materials is customized for each unique tooling design
 
 ---
 
@@ -630,14 +1200,18 @@ ST015 Putdown Stand Twin:
 ST010_1 Side 1 Tooling Twin:
 - Design Status: First stage complete, second stage in progress
 - Designer Assigned: Lisa Rodriguez
-- BOM Components: (from parts list)
+- OEM Part: Linked to specific 3D part geometry from OEM
+- Custom Design: Unique fixture design based on part geometry
+- BOM Components: (from parts list, customized for this part)
 - Manufacturing Status: Design/Manufacturing/Assembly/Testing
 - Quality Gates: Design review, manufacturing check, assembly test
 - Performance Metrics: Fit accuracy, durability, cycle time impact
 - Maintenance Requirements: Cleaning, adjustment frequency
-- Clamping Plan: (from OEM specifications)
-- Gun Interference: Validated by simulation
-- Gripper Access: Validated by simulation
+- Clamping Plan: (from OEM specifications for this specific part)
+- Gun Interference: Validated by simulation for this part geometry
+- Gripper Access: Validated by simulation for this part geometry
+- Part Geometry Validation: Ensures tooling matches exact part contours
+```
 
 ST020_1 Side 1 Tooling Twin:
 - Design Status: First stage complete, second stage in progress
@@ -673,16 +1247,16 @@ ST010_2 Side 2 Tooling Twin:
 
 ### 📝 Tooling & Fixture Design Checklist
 
-In NitroPlanner, the following checklist is modeled as a structured set of work units and quality gates for each tooling/fixture digital twin. Each item can be assigned to a responsible designer, tracked for completion, and validated at the appropriate workflow stage (first stage, second stage, simulation, manufacturing, etc.). This ensures all requirements are met before tooling is released for manufacturing or simulation.
+In NitroPlanner, the following checklist is modeled as a structured set of work units and quality gates for each **custom tooling/fixture digital twin**. Since each tooling design is unique based on the OEM part geometry, this checklist ensures all custom design requirements are met before tooling is released for manufacturing or simulation.
 
 **Checklist Items:**
 1. Has the correct Project start file been used and is in line with V.C. requirements?
 2. Have Customer Specified Clamping & Locating Points been Established and Used?
 3. Clamping Points are within Customer deviation specification.
 4. Has Tooling been designed around weld Guns (Including the Weld Gun Cooling Pipes)?
-5. Has Tooling been designed around all Interactive Tooling?
+5. Has Tooling been designed around all Interactive Tooling? (weld guns, grippers, and their individual units)
 6. Part Loading Sequence – is it possible to load parts?
-7. Sequence of Operation – units do not clash in Open/Closed positions.
+7. Sequence of Operation – individual units (clamps, pins, slides, dumps) do not clash in Open/Closed positions.
 8. Part Unloading Sequence – is it possible to Unload parts after welding?
 9. Is it possible for operator to load parts / weld / unload parts ergonomically?
 10. Fixture / Units have been Designed to Carline.
@@ -792,22 +1366,22 @@ In real-world projects, machine operation (MO) data—including sequence tables,
 
 **Putdown Stand (e.g., ST015):**
 - Digital twin includes:
-  - Part-in-place proxy status
-  - Associated sensors (e.g., part presence sensor)
-  - Any actuators (if present)
-- MO table is a checklist:
+  - Part-in-place proxy status (Unit 101-PK51)
+  - Associated sensors (e.g., part presence sensor - Unit 301-S1)
+  - Any actuators (if present - Unit 401-A1, etc.)
+- MO table is a checklist of individual units:
 
-| Item     | Dia, Deg/Stroke | Monitoring | Specification           | Key Identifier | Manufacturer |
-|----------|-----------------|------------|-------------------------|----------------|--------------|
-| 101-PK51 | (proxy only)    | N/A        | N/A                     | N/A            | N/A          |
+| Unit Number | Dia, Deg/Stroke | Monitoring | Specification           | Key Identifier | Manufacturer |
+|-------------|-----------------|------------|-------------------------|----------------|--------------|
+| 101-PK51    | (proxy only)    | N/A        | N/A                     | N/A            | N/A          |
 
 **Fixture with Actuators:**
-- Each actuator (cylinder, clamp) is a checklist item:
+- Each unit (cylinder, clamp, slide, sensor) is a checklist item:
 
-| Item   | Dia, Deg/Stroke | Monitoring | Specification         | Key Identifier | Manufacturer |
-|--------|-----------------|------------|-----------------------|----------------|--------------|
-| 102-C1 | Ø50, 90°        | Internal   | VU 50.1 BR2 A05 T12   | 2.1            | Tuenkers     |
-| 105-C1 | Ø57, 50mm       | Internal   | LSA-73-L-G-50-SEN-TRK | 1              | Zaytran      |
+| Unit Number | Dia, Deg/Stroke | Actuation Method | Monitoring | Specification         | Key Identifier | Manufacturer |
+|-------------|-----------------|------------------|------------|-----------------------|----------------|--------------|
+| 102-C1      | Ø50, 90°        | Pneumatic        | Internal   | VU 50.1 BR2 A05 T12   | 2.1            | Tuenkers     |
+| 105-C1      | Ø57, 50mm       | Pneumatic        | Internal   | LSA-73-L-G-50-SEN-TRK | 1              | Zaytran      |
 
 - Interlock matrix is modeled as workflow dependencies:
   - E.g., "Clamp must be open before transfer position is reached."
@@ -835,14 +1409,18 @@ This integration transforms static Excel artifacts into dynamic, actionable, and
 010R01 Gripper Twin:
 - Design Status: First stage complete, second stage in progress
 - Designer Assigned: David Kim
-- Payload Capacity: (calculated for part weight)
-- Gripper Type: Vacuum/Mechanical/Hybrid
-- Part Interface: (specified by part geometry)
-- Cycle Time Impact: (simulation validated)
+- OEM Part: Linked to specific 3D part geometry from OEM
+- Custom Design: Unique gripper design based on part geometry
+- Payload Capacity: (calculated for specific part weight)
+- Gripper Type: Vacuum/Mechanical/Hybrid (selected for this part)
+- Part Interface: (custom designed to match part geometry)
+- Cycle Time Impact: (simulation validated for this part)
 - Maintenance Requirements: Wear parts, cleaning
 - Performance History: Grip success rate, cycle times
-- Access Validation: Fits through ST010_1 opening
+- Access Validation: Fits through ST010_1 opening (validated for this part)
 - Robot Integration: Mounting interface designed
+- Part Geometry Validation: Ensures gripper interface matches exact part contours
+```
 
 020R01 Gripper Twin:
 - Design Status: First stage complete, second stage in progress
@@ -1057,6 +1635,8 @@ Simulation in the 6-robot cell project is managed as a series of structured work
 - **Inputs:**
   - 3D library of components (robots, fixtures, grippers, guns, etc.)
   - 2D concept layout (starting point, modifiable as needed)
+  - **Sequence Chart** (validated cycle time on paper with synthetic times)
+  - **Joint Data** (OEM joining specifications)
 - **Output:**
   - Fully built 3D cell model, ready for simulation and validation
 
@@ -1066,8 +1646,10 @@ Each simulation deliverable is a work unit in NitroPlanner, with a checklist of 
 #### Standard Simulation Checklist
 | Work Unit                | Responsible         | Example Status | Checklist Items (Subtasks)                                 |
 |--------------------------|--------------------|---------------|------------------------------------------------------------|
+| SEQUENCE CHART VALIDATION| Simulation Eng.    | 100%          | Validate sequence chart, synthetic times, cycle time target |
+| JOINT DATA IMPORT        | Simulation Eng.    | 100%          | Import OEM joint specs, validate locations, check conflicts |
 | ROBOT SIMULATION         | Simulation Eng.    | 80%           | Robot position, core config, flange check, collision check |
-| JOINING                  | Simulation Eng.    | 100%          | Joining process, validation                                |
+| JOINING                  | Simulation Eng.    | 100%          | Joint data processing, joining process, validation         |
 | GRIPPER                  | Simulation Eng.    | 100%          | Prototype, collision check, final approval                 |
 | FIXTURE                  | Simulation Eng.    | 100%          | Prototype, collision check, final approval                 |
 | DOCUMENTATION            | Simulation Eng.    | 60%           | Reports, videos, handover docs                             |
@@ -1083,6 +1665,13 @@ Each simulation deliverable is a work unit in NitroPlanner, with a checklist of 
 #### Detailed Simulation Validation Checklist
 Each work unit can have a checklist of the following items (as sub-tasks or quality gates):
 
+**Joint Data Processing:**
+- JOINT DATA IMPORTED FROM OEM SPECIFICATIONS
+- JOINT LOCATIONS VALIDATED AGAINST PART GEOMETRY
+- JOINT CONFLICTS IDENTIFIED AND RESOLVED
+- JOINT SEQUENCE OPTIMIZED FOR QUALITY AND CYCLE TIME
+
+**Robot Setup:**
 - STATION/ROBOT/APPLICATION assigned
 - ROBOT POSITION - STAGE 1
 - CORE CUBIC S CONFIGURED
@@ -1093,7 +1682,9 @@ Each work unit can have a checklist of the following items (as sub-tasks or qual
 - ROBOT RISER CONFIRMED
 - TRACK LENGTH + CATRAC CONFIRMED
 - COLLISIONS CHECKED - STAGE 1
-- SPOT WELDS DISTRIBUTED + PROJECTED
+
+**Spot Welding Process:**
+- SPOT WELDS DISTRIBUTED + PROJECTED (from joint data)
 - REFERENCE WELD GUN SELECTED
 - REFERENCE WELD GUN COLLISION CHECK
 - WELD GUN FORCE CHECKED IN WIS7
@@ -1101,10 +1692,20 @@ Each work unit can have a checklist of the following items (as sub-tasks or qual
 - FINAL WELD GUN COLLISION CHECK
 - FINAL WELD GUN APPROVED
 - WELD GUN EQUIPMENT PLACED AND CONFIRMED
-- SEALING DATA IMPORTED AND CHECKED
+
+**Sealing Process:**
+- SEALING DATA IMPORTED AND CHECKED (from joint data)
 - SEALER PROPOSAL CREATED AND SENT
 - SEALER GUN APPROVED
 - SEALER EQUIPMENT PLACED AND CONFIRMED
+
+**Adhesive/Gluing Process:**
+- ADHESIVE DATA IMPORTED AND CHECKED (from joint data)
+- ADHESIVE DISPENSER PROPOSAL CREATED AND SENT
+- ADHESIVE DISPENSER APPROVED
+- ADHESIVE EQUIPMENT PLACED AND CONFIRMED
+
+**Equipment Integration:**
 - GRIPPER EQUIPMENT PROTOTYPE CREATED
 - FINAL GRIPPER COLLISION CHECK
 - GRIPPER DESIGN FINAL APPROVAL
